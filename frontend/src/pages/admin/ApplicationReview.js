@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { adminApi } from '../../services/api';
+import { adminApi, documentApi } from '../../services/api';
 
 const ApplicationReview = ({ applicationId, onBack }) => {
   const [app, setApp] = useState(null);
@@ -26,9 +26,23 @@ const ApplicationReview = ({ applicationId, onBack }) => {
       await adminApi.review(applicationId, { action, comment, refusalReason });
       onBack();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Action failed');
+      alert(err.response?.data?.message || 'Action failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDownload = async (doc) => {
+    try {
+      const { data } = await documentApi.download(doc.id);
+      const url = URL.createObjectURL(new Blob([data]));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.fileName || `document-${doc.id}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Download failed');
     }
   };
 
@@ -101,6 +115,16 @@ const ApplicationReview = ({ applicationId, onBack }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <StatusPill status={doc.status} />
+                      <button
+                        onClick={() => handleDownload(doc)}
+                        className="text-xs text-gray-500 hover:text-gray-800 font-medium flex items-center gap-1"
+                        title="Download document"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        Download
+                      </button>
                       {canReview && (
                         <button onClick={() => { setAnnotatingDocId(doc.id); setAnnotation(''); }}
                           className="text-xs text-primary-600 hover:text-primary-800 font-medium">

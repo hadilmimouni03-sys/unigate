@@ -33,7 +33,7 @@ const DocumentUpload = ({ application, onUpload, canUpload }) => {
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
-        [type]: err.response?.data?.detail || 'Upload failed',
+        [type]: err.response?.data?.message || 'Upload failed',
       }));
     } finally {
       setUploading((prev) => ({ ...prev, [type]: false }));

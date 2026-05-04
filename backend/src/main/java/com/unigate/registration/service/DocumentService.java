@@ -88,6 +88,7 @@ public class DocumentService {
         Document doc = documentRepository.findById(documentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document", documentId));
         doc.setReviewerAnnotation(annotation);
+        doc.setStatus(DocumentStatus.NEEDS_CORRECTION);
         return toDTO(documentRepository.save(doc));
     }
 

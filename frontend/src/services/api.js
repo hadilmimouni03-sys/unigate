@@ -62,6 +62,7 @@ export const documentApi = {
   listForApplication: (appId) => api.get(`/api/documents/application/${appId}`),
   annotate: (docId, annotation) => api.patch(`/api/documents/${docId}/annotate`, { annotation }),
   downloadUrl: (docId) => `${API_BASE}/api/documents/${docId}/download`,
+  download: (docId) => api.get(`/api/documents/${docId}/download`, { responseType: 'blob' }),
 };
 
 export const adminApi = {

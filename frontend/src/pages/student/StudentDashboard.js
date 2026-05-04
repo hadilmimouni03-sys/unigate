@@ -40,10 +40,11 @@ const DOC_ICONS = {
 };
 
 const DOC_COLORS = {
-  VALID: { bg: 'bg-green-50', border: 'border-green-200', icon: 'text-green-600', badge: 'bg-green-100 text-green-700' },
-  INVALID: { bg: 'bg-red-50', border: 'border-red-200', icon: 'text-red-500', badge: 'bg-red-100 text-red-700' },
-  PENDING: { bg: 'bg-amber-50', border: 'border-amber-200', icon: 'text-amber-500', badge: 'bg-amber-100 text-amber-700' },
-  null: { bg: 'bg-gray-50', border: 'border-gray-200', icon: 'text-gray-400', badge: 'bg-gray-100 text-gray-600' },
+  VALID:            { bg: 'bg-green-50',  border: 'border-green-200',  icon: 'text-green-600',  badge: 'bg-green-100 text-green-700' },
+  INVALID:          { bg: 'bg-red-50',    border: 'border-red-200',    icon: 'text-red-500',    badge: 'bg-red-100 text-red-700' },
+  PENDING:          { bg: 'bg-amber-50',  border: 'border-amber-200',  icon: 'text-amber-500',  badge: 'bg-amber-100 text-amber-700' },
+  NEEDS_CORRECTION: { bg: 'bg-orange-50', border: 'border-orange-300', icon: 'text-orange-500', badge: 'bg-orange-100 text-orange-700' },
+  null:             { bg: 'bg-gray-50',   border: 'border-gray-200',   icon: 'text-gray-400',   badge: 'bg-gray-100 text-gray-600' },
 };
 
 const DOC_TYPES = ['DIPLOMA', 'TRANSCRIPT', 'ID_CARD', 'PHOTO', 'MEDICAL_CERT', 'AGREEMENT'];
@@ -51,6 +52,14 @@ const DOC_NAMES = {
   DIPLOMA: 'Diploma / Baccalaureate', TRANSCRIPT: 'Academic Transcript',
   ID_CARD: 'National ID Card', PHOTO: 'Passport Photo',
   MEDICAL_CERT: 'Medical Certificate', AGREEMENT: 'Enrolment Agreement',
+};
+const DOC_ACCEPT = {
+  DIPLOMA: '.pdf',
+  TRANSCRIPT: '.pdf',
+  ID_CARD: '.pdf,.jpg,.jpeg,.png',
+  PHOTO: '.jpg,.jpeg,.png',
+  MEDICAL_CERT: '.pdf,.jpg,.jpeg',
+  AGREEMENT: '.pdf',
 };
 
 const StudentDashboard = () => {
@@ -85,7 +94,7 @@ const StudentDashboard = () => {
       const { data } = await applicationApi.submit(application.id);
       setApplication(data);
     } catch (err) {
-      alert(err.response?.data?.detail || 'Submission failed');
+      alert(err.response?.data?.message || 'Submission failed');
     } finally {
       setSubmitting(false);
     }
@@ -381,6 +390,17 @@ const StudentDashboard = () => {
                   {doc?.validationMessage && (
                     <p className="text-xs text-red-600 mt-1">{doc.validationMessage}</p>
                   )}
+                  {doc?.reviewerAnnotation && (
+                    <div className="mt-2 flex items-start gap-1.5 bg-orange-50 border border-orange-200 rounded-lg px-2.5 py-2">
+                      <svg className="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                      </svg>
+                      <div>
+                        <p className="text-xs font-semibold text-orange-700">Admin note</p>
+                        <p className="text-xs text-orange-800 mt-0.5">{doc.reviewerAnnotation}</p>
+                      </div>
+                    </div>
+                  )}
                   {!doc && (
                     <p className="text-xs text-gray-400 mt-0.5">Not uploaded yet</p>
                   )}
@@ -403,7 +423,7 @@ const StudentDashboard = () => {
                     <input
                       type="file"
                       className="hidden"
-                      accept=".pdf,.jpg,.jpeg,.png"
+                      accept={DOC_ACCEPT[type]}
                       disabled={uploading[type]}
                       onChange={(e) => handleUpload(type, e.target.files[0])}
                     />
