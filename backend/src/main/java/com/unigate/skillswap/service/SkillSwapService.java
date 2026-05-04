@@ -78,8 +78,11 @@ public class SkillSwapService {
 
     @Transactional
     public SkillSwapDTO requestSwap(Long requesterId, Long providerOfferId, String message) {
+        var requesterStudent = studentRepository.findById(requesterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student", requesterId));
         SkillOffer requesterOffer = offerRepository.findByStudentIdAndActiveTrue(requesterId)
-                .orElseThrow(() -> new BusinessException("Create an offer first to request a swap"));
+                .orElseGet(() -> offerRepository.save(
+                        SkillOffer.builder().student(requesterStudent).build()));
         SkillOffer providerOffer = offerRepository.findById(providerOfferId)
                 .orElseThrow(() -> new ResourceNotFoundException("SkillOffer", providerOfferId));
 

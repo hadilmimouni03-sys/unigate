@@ -1,280 +1,343 @@
 import React, { useState, useEffect } from 'react';
-import { gradeApi } from '../../services/api';
 
-const markColor = (mark) => {
-  if (mark == null) return 'text-gray-400';
-  if (mark >= 14) return 'text-green-600';
-  if (mark >= 10) return 'text-blue-600';
-  return 'text-red-500';
+const PASS = 10;
+
+const uid = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+
+const newCourse = () => ({
+  id: uid(),
+  name: '',
+  coef: 3,
+  dsGrade: '',
+  dsWeight: 40,
+  examGrade: '',
+  examWeight: 60,
+  hasTP: false,
+  tpGrade: '',
+  tpWeight: 0,
+});
+
+const computeFinal = (c) => {
+  const ds = parseFloat(c.dsGrade);
+  const exam = parseFloat(c.examGrade);
+  if (isNaN(ds) || isNaN(exam)) return null;
+  if (c.hasTP && isNaN(parseFloat(c.tpGrade))) return null;
+  const tp = c.hasTP ? parseFloat(c.tpGrade) : 0;
+  const tpW = c.hasTP ? c.tpWeight / 100 : 0;
+  const val = (c.dsWeight / 100) * ds + (c.examWeight / 100) * exam + tpW * tp;
+  return Math.round(val * 100) / 100;
 };
 
-const GradeRing = ({ mark, max = 20, size = 52 }) => {
-  if (mark == null) return <span className="text-sm text-gray-400">—</span>;
-  const pct = (mark / max) * 100;
-  const color = mark >= 14 ? '#22c55e' : mark >= 10 ? '#3b82f6' : '#ef4444';
-  const track = mark >= 14 ? '#dcfce7' : mark >= 10 ? '#dbeafe' : '#fee2e2';
+const weightSum = (c) =>
+  c.dsWeight + c.examWeight + (c.hasTP ? c.tpWeight : 0);
+
+const markColor = (m) =>
+  m == null ? 'text-gray-400' : m >= 14 ? 'text-green-600' : m >= PASS ? 'text-blue-600' : 'text-red-500';
+
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+const GradeInput = ({ label, grade, weight, onGrade, onWeight }) => (
+  <div className="flex items-center gap-2">
+    <span className="text-xs font-semibold text-gray-500 w-9 shrink-0">{label}</span>
+    <div className="flex items-center gap-1">
+      <input
+        type="number" min="0" max="20" step="0.25"
+        value={grade}
+        onChange={(e) => onGrade(e.target.value)}
+        placeholder="—"
+        className="w-16 text-center text-sm border border-gray-200 rounded-lg py-1.5 outline-none focus:ring-2 focus:ring-blue-300 bg-gray-50"
+      />
+      <span className="text-xs text-gray-400">/20</span>
+    </div>
+    <div className="flex items-center gap-1 ml-2">
+      <input
+        type="number" min="0" max="100" step="5"
+        value={weight}
+        onChange={(e) => onWeight(e.target.value)}
+        className="w-14 text-center text-sm border border-gray-200 rounded-lg py-1.5 outline-none focus:ring-2 focus:ring-blue-300 bg-gray-50"
+      />
+      <span className="text-xs text-gray-400">%</span>
+    </div>
+  </div>
+);
+
+const Toggle = ({ on, onToggle }) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    className={`relative w-8 h-4 rounded-full transition shrink-0 ${on ? 'bg-blue-500' : 'bg-gray-200'}`}
+  >
+    <span
+      className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-4' : ''}`}
+    />
+  </button>
+);
+
+const CourseCard = ({ course, index, onUpdate, onRemove, canRemove }) => {
+  const final = computeFinal(course);
+  const wsum = weightSum(course);
+  const weightsOk = Math.abs(wsum - 100) < 0.01;
+  const passed = final !== null && final >= PASS;
+
+  const borderCls = final === null
+    ? 'border-gray-100'
+    : passed ? 'border-green-200' : 'border-red-200';
+
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      <svg className="-rotate-90" style={{ width: size, height: size }} viewBox="0 0 36 36">
-        <circle cx="18" cy="18" r="14" fill="none" stroke={track} strokeWidth="3.5"/>
-        <circle cx="18" cy="18" r="14" fill="none" stroke={color} strokeWidth="3.5"
-          strokeDasharray={`${pct * 0.879} 100`} strokeLinecap="round"/>
-      </svg>
-      <span className="absolute text-xs font-bold" style={{ color }}>{mark.toFixed(1)}</span>
+    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${borderCls}`}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-50">
+        <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
+          {index + 1}
+        </div>
+        <input
+          type="text"
+          value={course.name}
+          onChange={(e) => onUpdate('name', e.target.value)}
+          placeholder="Course name…"
+          className="flex-1 text-sm font-medium text-gray-800 border-0 outline-none bg-transparent placeholder-gray-300"
+        />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-xs text-gray-400">Coef.</span>
+          <input
+            type="number" min="1" max="20" step="1"
+            value={course.coef}
+            onChange={(e) => onUpdate('coef', Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-12 text-center text-sm font-semibold border border-gray-200 rounded-lg py-1 outline-none focus:ring-2 focus:ring-blue-300 bg-gray-50"
+          />
+        </div>
+        {canRemove && (
+          <button
+            onClick={onRemove}
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Grade inputs */}
+      <div className="px-5 py-4 space-y-3">
+        <GradeInput
+          label="DS"
+          grade={course.dsGrade}
+          weight={course.dsWeight}
+          onGrade={(v) => onUpdate('dsGrade', v)}
+          onWeight={(v) => onUpdate('dsWeight', parseFloat(v) || 0)}
+        />
+        <GradeInput
+          label="Exam"
+          grade={course.examGrade}
+          weight={course.examWeight}
+          onGrade={(v) => onUpdate('examGrade', v)}
+          onWeight={(v) => onUpdate('examWeight', parseFloat(v) || 0)}
+        />
+
+        {/* TP toggle */}
+        <div className="flex items-center gap-3">
+          <Toggle on={course.hasTP} onToggle={() => onUpdate('hasTP', !course.hasTP)} />
+          <span className="text-xs text-gray-500 select-none">Has TP</span>
+          {course.hasTP && (
+            <div className="flex-1">
+              <GradeInput
+                label="TP"
+                grade={course.tpGrade}
+                weight={course.tpWeight}
+                onGrade={(v) => onUpdate('tpGrade', v)}
+                onWeight={(v) => onUpdate('tpWeight', parseFloat(v) || 0)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Weights warning */}
+        {!weightsOk && (
+          <p className="text-xs text-amber-600 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Weights sum to {wsum}% — must equal 100%
+          </p>
+        )}
+      </div>
+
+      {/* Result footer */}
+      {final !== null && weightsOk && (
+        <div className={`px-5 py-2.5 flex items-center justify-between border-t ${passed ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+          <span className="text-sm font-bold text-gray-700">
+            Final:{' '}
+            <span className={markColor(final)}>{final.toFixed(2)}/20</span>
+          </span>
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            {passed ? '✓ Pass' : '✗ Fail'}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
 
+// ── Main page ────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'unigate_grade_sim';
+
+const STATUS_CFG = {
+  PASS:       { bg: 'bg-green-50 border-green-200', text: 'text-green-700', icon: '🎉', label: 'You pass the year' },
+  RATTRAPAGE: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', icon: '⚠️', label: 'Rattrapage — retake failed exams' },
+  FAIL:       { bg: 'bg-red-50 border-red-200',     text: 'text-red-700',   icon: '✗',  label: 'You fail the year' },
+};
+
 const GradesPage = () => {
-  const [grades, setGrades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [simForm, setSimForm] = useState({ moduleCode: '', ccMark: '', examMark: '' });
-  const [simResult, setSimResult] = useState(null);
-  const [simError, setSimError] = useState('');
-  const [simulating, setSimulating] = useState(false);
-  const [activeSem, setActiveSem] = useState('all');
+  const [courses, setCourses] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [newCourse()];
+    } catch {
+      return [newCourse()];
+    }
+  });
 
   useEffect(() => {
-    gradeApi.myGrades()
-      .then(({ data }) => setGrades(data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
+  }, [courses]);
 
-  const handleSimulate = async (e) => {
-    e.preventDefault();
-    setSimError('');
-    setSimResult(null);
-    setSimulating(true);
-    try {
-      const { data } = await gradeApi.simulate({
-        moduleCode: simForm.moduleCode,
-        ccMark: parseFloat(simForm.ccMark),
-        examMark: parseFloat(simForm.examMark),
-      });
-      setSimResult(data);
-    } catch (err) {
-      setSimError(err.response?.data?.message || 'Simulation failed.');
-    } finally {
-      setSimulating(false);
-    }
+  const add = () => setCourses((p) => [...p, newCourse()]);
+  const remove = (id) => setCourses((p) => p.filter((c) => c.id !== id));
+  const update = (id, key, val) =>
+    setCourses((p) => p.map((c) => (c.id === id ? { ...c, [key]: val } : c)));
+  const clearAll = () => {
+    if (window.confirm('Clear all courses and start over?')) setCourses([newCourse()]);
   };
 
-  const semesters = [...new Set(grades.map((g) => g.semester))].sort();
-  const filtered = activeSem === 'all' ? grades : grades.filter((g) => g.semester === parseInt(activeSem));
+  // ── Simulation ──────────────────────────────────────────────────────────────
 
-  const semGpa = (sem) => {
-    const sg = grades.filter((g) => g.semester === sem && g.finalMark != null);
-    if (!sg.length) return null;
-    const totalCredits = sg.reduce((s, g) => s + (g.credits || 1), 0);
-    const weighted = sg.reduce((s, g) => s + g.finalMark * (g.credits || 1), 0);
-    return (weighted / totalCredits).toFixed(2);
-  };
+  const results = courses.map((c) => ({ ...c, final: computeFinal(c) }));
+  const filled = results.filter((r) => r.final !== null && Math.abs(weightSum(r) - 100) < 0.01);
 
-  const overallAvg = () => {
-    const graded = grades.filter((g) => g.finalMark != null);
-    if (!graded.length) return null;
-    const tc = graded.reduce((s, g) => s + (g.credits || 1), 0);
-    const w = graded.reduce((s, g) => s + g.finalMark * (g.credits || 1), 0);
-    return (w / tc).toFixed(2);
-  };
+  const totalCoef   = courses.reduce((s, c) => s + Number(c.coef), 0);
+  const filledCoef  = filled.reduce((s, c) => s + Number(c.coef), 0);
+  const earnedCoef  = filled.filter((c) => c.final >= PASS).reduce((s, c) => s + Number(c.coef), 0);
+  const failedCoef  = filled.filter((c) => c.final < PASS).reduce((s, c) => s + Number(c.coef), 0);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const gpa = filledCoef > 0
+    ? Math.round((filled.reduce((s, c) => s + c.final * Number(c.coef), 0) / filledCoef) * 100) / 100
+    : null;
+
+  const status =
+    gpa === null      ? null
+    : gpa < PASS      ? 'FAIL'
+    : failedCoef > 0  ? 'RATTRAPAGE'
+    : 'PASS';
+
+  const scfg = status ? STATUS_CFG[status] : null;
 
   return (
-    <div className="px-6 py-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Academic Grades</h1>
-      <p className="text-gray-500 text-sm mb-6">Your grades and performance overview</p>
+    <div className="px-6 py-6 max-w-4xl mx-auto">
 
-      {/* Stats row */}
-      {grades.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {[
-            { label: 'Overall Average', value: overallAvg() ? `${overallAvg()}/20` : '—', bg: 'from-blue-500 to-indigo-500' },
-            { label: 'Modules', value: grades.length, bg: 'from-violet-500 to-purple-500' },
-            { label: 'Passed', value: grades.filter((g) => g.passed).length, bg: 'from-green-500 to-emerald-500' },
-            { label: 'Failed', value: grades.filter((g) => g.passed === false).length, bg: 'from-red-400 to-rose-500' },
-          ].map(({ label, value, bg }) => (
-            <div key={label} className={`bg-gradient-to-br ${bg} rounded-2xl p-4 text-white shadow-sm`}>
-              <p className="text-2xl font-bold">{value}</p>
-              <p className="text-xs opacity-80 mt-0.5">{label}</p>
-            </div>
-          ))}
+      {/* Page header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Grade Simulator</h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Enter your expected grades and component weights to simulate your results
+          </p>
         </div>
-      )}
+        <button
+          onClick={clearAll}
+          className="text-xs text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition"
+        >
+          Clear all
+        </button>
+      </div>
 
-      {/* Semester filter tabs */}
-      {semesters.length > 0 && (
-        <div className="flex gap-1.5 mb-5 flex-wrap">
-          <button
-            onClick={() => setActiveSem('all')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition ${
-              activeSem === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All Semesters
-          </button>
-          {semesters.map((s) => (
-            <button
-              key={s}
-              onClick={() => setActiveSem(String(s))}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${
-                activeSem === String(s) ? 'bg-blue-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              S{s}
-              {semGpa(s) && (
-                <span className={`${activeSem === String(s) ? 'bg-white/20' : 'bg-gray-200'} rounded-full px-1.5 py-0.5`}>
-                  {semGpa(s)}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Grades grid */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-          <div className="text-4xl mb-3">📊</div>
-          <p className="text-gray-500">No grades recorded yet.</p>
-        </div>
-      ) : (
-        <div className="space-y-2 mb-8">
-          {filtered.map((g) => (
-            <div key={g.id} className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                <span className="text-xs font-bold text-blue-600">{g.credits ?? '?'}cr</span>
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{g.moduleName}</p>
-                  <span className="text-xs text-gray-400 bg-gray-100 rounded px-1.5 py-0.5 shrink-0">S{g.semester}</span>
-                </div>
-                {g.requiredExamToPass && g.examMark == null && (
-                  <p className="text-xs mt-0.5">
-                    <span className="text-gray-400">Need for exam: </span>
-                    <span className={g.requiredExamToPass === 'IMPOSSIBLE' ? 'text-red-500 font-semibold' : 'text-gray-700 font-medium'}>
-                      {g.requiredExamToPass}
-                    </span>
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-5 shrink-0">
-                <div className="text-center hidden sm:block">
-                  <p className="text-xs text-gray-400 mb-0.5">CC</p>
-                  <p className={`text-sm font-semibold ${markColor(g.ccMark)}`}>
-                    {g.ccMark != null ? g.ccMark.toFixed(1) : '—'}
-                  </p>
-                </div>
-                <div className="text-center hidden sm:block">
-                  <p className="text-xs text-gray-400 mb-0.5">Exam</p>
-                  <p className={`text-sm font-semibold ${markColor(g.examMark)}`}>
-                    {g.examMark != null ? g.examMark.toFixed(1) : '—'}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-gray-400 mb-1">Final</p>
-                  <GradeRing mark={g.finalMark} />
-                </div>
-                <div className="w-14 text-center">
-                  {g.passed == null ? (
-                    <span className="text-xs text-gray-400">Pending</span>
-                  ) : g.passed ? (
-                    <span className="text-xs font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Pass</span>
-                  ) : (
-                    <span className="text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Fail</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Grade Simulator */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex items-center gap-2.5 mb-5">
-          <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center">
-            <svg className="w-4.5 h-4.5 text-violet-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{width:'18px',height:'18px'}}>
-              <path d="M9 7H6a2 2 0 00-2 2v9a2 2 0 002 2h9a2 2 0 002-2v-3M16 3l-4 4 4 4M12 7h9"/>
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold text-gray-800">Grade Simulator</h2>
-            <p className="text-xs text-gray-400">Calculate what exam mark you need to pass</p>
-          </div>
-        </div>
-
-        <form onSubmit={handleSimulate} className="space-y-3 max-w-sm">
-          <input
-            className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-gray-50"
-            placeholder="Module code (e.g. INFO101)"
-            value={simForm.moduleCode}
-            onChange={(e) => setSimForm({ ...simForm, moduleCode: e.target.value })}
-            required
-          />
-          <div className="flex gap-3">
-            <input
-              type="number" min="0" max="20" step="0.01"
-              className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-gray-50"
-              placeholder="CC (0–20)"
-              value={simForm.ccMark}
-              onChange={(e) => setSimForm({ ...simForm, ccMark: e.target.value })}
-              required
-            />
-            <input
-              type="number" min="0" max="20" step="0.01"
-              className="flex-1 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-gray-50"
-              placeholder="Exam (0–20)"
-              value={simForm.examMark}
-              onChange={(e) => setSimForm({ ...simForm, examMark: e.target.value })}
-              required
-            />
-          </div>
-          {simError && <p className="text-red-500 text-xs">{simError}</p>}
-          <button
-            type="submit"
-            disabled={simulating}
-            className="w-full bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 text-white py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2"
-          >
-            {simulating && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>}
-            Simulate
-          </button>
-        </form>
-
-        {simResult && (
-          <div className={`mt-4 p-4 rounded-xl flex items-center gap-4 ${
-            simResult.passed
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            <GradeRing mark={simResult.finalMark} size={56} />
+      {/* Summary banner */}
+      {gpa !== null && (
+        <div className={`rounded-2xl border p-5 mb-6 ${scfg.bg}`}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <p className="font-semibold text-gray-800 text-sm">
-                Final mark: {simResult.finalMark?.toFixed(2)}/20
+              <p className="text-xs text-gray-500 mb-1">GPA</p>
+              <p className={`text-2xl font-bold ${markColor(gpa)}`}>
+                {gpa.toFixed(2)}
+                <span className="text-sm font-normal text-gray-400">/20</span>
               </p>
-              <p className={`text-sm mt-0.5 font-medium ${simResult.passed ? 'text-green-700' : 'text-red-700'}`}>
-                {simResult.passed ? '✓ You would pass' : '✗ You would fail'}
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Credits earned</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {earnedCoef}
+                <span className="text-sm font-normal text-gray-400">/{totalCoef}</span>
               </p>
-              {simResult.requiredExamToPass && (
-                <p className="text-xs text-gray-600 mt-1">
-                  Exam needed to pass: <span className={`font-semibold ${simResult.requiredExamToPass === 'IMPOSSIBLE' ? 'text-red-600' : 'text-gray-800'}`}>
-                    {simResult.requiredExamToPass}
-                  </span>
-                </p>
-              )}
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Credits lost</p>
+              <p className={`text-2xl font-bold ${failedCoef > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                {failedCoef}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Year result</p>
+              <p className={`text-sm font-bold flex items-center gap-1.5 mt-1 ${scfg.text}`}>
+                <span>{scfg.icon}</span>
+                {scfg.label}
+              </p>
             </div>
           </div>
-        )}
+
+          {status === 'RATTRAPAGE' && (
+            <p className="text-xs text-amber-700 mt-3 border-t border-amber-200 pt-3">
+              Your GPA is ≥ 10, but you failed {filled.filter((c) => c.final < PASS).length} course(s)
+              ({failedCoef} credits). You must retake the exams for those courses.
+            </p>
+          )}
+          {status === 'FAIL' && (
+            <p className="text-xs text-red-600 mt-3 border-t border-red-200 pt-3">
+              Your GPA is below 10 — you must repeat the year.
+            </p>
+          )}
+          {status === 'PASS' && (
+            <p className="text-xs text-green-700 mt-3 border-t border-green-200 pt-3">
+              GPA ≥ 10 and all {totalCoef} credits earned — you pass the year!
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Course cards */}
+      <div className="space-y-4 mb-5">
+        {results.map((c, i) => (
+          <CourseCard
+            key={c.id}
+            course={c}
+            index={i}
+            onUpdate={(key, val) => update(c.id, key, val)}
+            onRemove={() => remove(c.id)}
+            canRemove={courses.length > 1}
+          />
+        ))}
+      </div>
+
+      {/* Add course button */}
+      <button
+        onClick={add}
+        className="w-full py-3.5 border-2 border-dashed border-gray-200 rounded-2xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 transition flex items-center justify-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Add Course
+      </button>
+
+      {/* Legend */}
+      <div className="mt-6 bg-gray-50 rounded-xl px-4 py-3 text-xs text-gray-400 space-y-1">
+        <p><strong className="text-gray-500">DS</strong> — Continuous assessment (devoir surveillé)</p>
+        <p><strong className="text-gray-500">TP</strong> — Practical work (travaux pratiques) — toggle per course if applicable</p>
+        <p><strong className="text-gray-500">GPA ≥ 10 + all credits</strong> → Pass · <strong className="text-gray-500">GPA ≥ 10 + missing credits</strong> → Rattrapage · <strong className="text-gray-500">GPA &lt; 10</strong> → Fail</p>
+        <p>Your simulation is saved automatically in your browser.</p>
       </div>
     </div>
   );

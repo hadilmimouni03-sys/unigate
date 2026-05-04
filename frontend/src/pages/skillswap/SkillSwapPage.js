@@ -73,16 +73,16 @@ const SkillSwapPage = () => {
         description: offerForm.description,
         availability: offerForm.availability,
       });
-      notify('Offer saved successfully!');
+      notify('Profile saved successfully!');
     } catch {
-      notify('Failed to save offer.', 'error');
+      notify('Failed to save profile.', 'error');
     }
   };
 
   const handleRequest = async (offerId) => {
     try {
       await skillSwapApi.requestSwap(offerId, requestMsg);
-      notify('Swap request sent!');
+      notify('Connection request sent!');
       setRequestingId(null);
       setRequestMsg('');
     } catch {
@@ -93,7 +93,7 @@ const SkillSwapPage = () => {
   const handleRespond = async (swapId, accept) => {
     try {
       await skillSwapApi.respond(swapId, accept, '');
-      notify(accept ? 'Swap accepted!' : 'Swap rejected.');
+      notify(accept ? 'Session accepted!' : 'Session declined.');
       skillSwapApi.mySwaps().then(({ data }) => setMySwaps(data));
     } catch {
       notify('Action failed.', 'error');
@@ -103,14 +103,14 @@ const SkillSwapPage = () => {
   const TABS = [
     ['marketplace', 'Marketplace'],
     ['matches', 'My Matches'],
-    ['offer', 'My Offer'],
-    ['my-swaps', 'My Swaps'],
+    ['offer', 'My Profile'],
+    ['my-swaps', 'My Sessions'],
   ];
 
   return (
     <div className="px-6 py-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Skill Swap</h1>
-      <p className="text-gray-500 text-sm mb-6">Exchange knowledge with fellow students</p>
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">Peer Learning</h1>
+      <p className="text-gray-500 text-sm mb-6">Connect with fellow students to share and learn skills</p>
 
       {feedback.msg && (
         <div className={`mb-4 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
@@ -203,7 +203,7 @@ const SkillSwapPage = () => {
                       onClick={() => setRequestingId(o.id)}
                       className="mt-auto w-full border border-blue-200 text-blue-600 hover:bg-blue-50 py-2 rounded-xl text-xs font-semibold transition"
                     >
-                      Request Swap
+                      Connect
                     </button>
                   )}
                 </div>
@@ -223,7 +223,7 @@ const SkillSwapPage = () => {
           ) : matches.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
               <div className="text-4xl mb-3">🎯</div>
-              <p className="text-gray-500 text-sm">No matches found. Save your offer first!</p>
+              <p className="text-gray-500 text-sm">No matches found. Set up your profile first!</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -242,7 +242,7 @@ const SkillSwapPage = () => {
                       onClick={() => { setTab('marketplace'); setRequestingId(o.id); }}
                       className="mt-3 text-blue-600 hover:text-blue-800 text-xs font-semibold"
                     >
-                      Request Swap →
+                      Connect →
                     </button>
                   </div>
                 </div>
@@ -256,7 +256,7 @@ const SkillSwapPage = () => {
       {tab === 'offer' && (
         <div className="max-w-lg">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-gray-800 mb-5">Create or Update Your Offer</h2>
+            <h2 className="text-sm font-semibold text-gray-800 mb-5">Set Up Your Learning Profile</h2>
             <form onSubmit={handleSaveOffer} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
@@ -307,7 +307,7 @@ const SkillSwapPage = () => {
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
               >
-                Save Offer
+                Save Profile
               </button>
             </form>
           </div>
@@ -323,8 +323,8 @@ const SkillSwapPage = () => {
             </div>
           ) : mySwaps.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-              <div className="text-4xl mb-3">🔄</div>
-              <p className="text-gray-500 text-sm">No swaps yet. Browse the marketplace to get started.</p>
+              <div className="text-4xl mb-3">🤝</div>
+              <p className="text-gray-500 text-sm">No sessions yet. Browse the marketplace to connect with peers.</p>
             </div>
           ) : (
             <div className="space-y-3">

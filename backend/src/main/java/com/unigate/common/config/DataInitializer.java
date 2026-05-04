@@ -1,9 +1,5 @@
 package com.unigate.common.config;
 
-import com.unigate.grades.entity.GradeConfig;
-import com.unigate.grades.entity.StudentGrade;
-import com.unigate.grades.repository.GradeConfigRepository;
-import com.unigate.grades.repository.StudentGradeRepository;
 import com.unigate.internship.entity.Company;
 import com.unigate.internship.entity.Offer;
 import com.unigate.internship.enums.OfferStatus;
@@ -47,8 +43,6 @@ public class DataInitializer {
 
     private final UserRepository userRepository;
     private final ApplicationRepository applicationRepository;
-    private final GradeConfigRepository gradeConfigRepository;
-    private final StudentGradeRepository studentGradeRepository;
     private final CourseRepository courseRepository;
     private final ClassGroupRepository classGroupRepository;
     private final TimetableSlotRepository timetableSlotRepository;
@@ -231,51 +225,6 @@ public class DataInitializer {
     }
 
     @Bean
-    @Order(4)
-    CommandLineRunner seedGrades() {
-        return args -> {
-            if (gradeConfigRepository.count() > 0) return;
-
-            // Grade configs
-            GradeConfig gc1 = saveGradeConfig("INFO101", "Algorithms & Data Structures", "Computer Science", 0.4, 0.6, 6, 1);
-            GradeConfig gc2 = saveGradeConfig("INFO102", "Database Management Systems", "Computer Science", 0.4, 0.6, 5, 1);
-            GradeConfig gc3 = saveGradeConfig("INFO103", "Computer Networks", "Computer Science", 0.3, 0.7, 4, 2);
-            GradeConfig gc4 = saveGradeConfig("INFO104", "Web Development", "Computer Science", 0.5, 0.5, 4, 2);
-            GradeConfig gc5 = saveGradeConfig("INFO201", "Artificial Intelligence", "Computer Science", 0.4, 0.6, 5, 3);
-            GradeConfig gc6 = saveGradeConfig("INFO202", "Machine Learning", "Computer Science", 0.4, 0.6, 5, 3);
-            GradeConfig gc7 = saveGradeConfig("INFO203", "Operating Systems", "Computer Science", 0.3, 0.7, 4, 3);
-            GradeConfig gc8 = saveGradeConfig("INFO301", "Software Engineering", "Computer Science", 0.4, 0.6, 5, 5);
-            GradeConfig gc9 = saveGradeConfig("MATH101", "Linear Algebra", "Mathematics", 0.4, 0.6, 4, 1);
-            GradeConfig gc10 = saveGradeConfig("MATH102", "Probability & Statistics", "Mathematics", 0.4, 0.6, 4, 2);
-
-            // Seed grades for Ahmed (APPROVED student)
-            userRepository.findByEmail("ahmed.ben.ali@student.unigate.com").ifPresent(user -> {
-                Student s = (Student) user;
-                saveGrade(s, gc1, 14.5, 13.0);
-                saveGrade(s, gc2, 16.0, 15.5);
-                saveGrade(s, gc3, 12.0, 11.0);
-                saveGrade(s, gc4, 18.0, 17.0);
-                saveGrade(s, gc5, 13.5, 12.0);
-                saveGrade(s, gc6, 15.0, 14.0);
-                saveGrade(s, gc7, 11.0, 9.5);
-                saveGrade(s, gc8, 17.0, 16.0);
-                saveGrade(s, gc9, 14.0, 13.5);
-                saveGrade(s, gc10, 15.5, 14.5);
-            });
-
-            // Seed grades for Sarra (MASTER student)
-            userRepository.findByEmail("sarra.trabelsi@student.unigate.com").ifPresent(user -> {
-                Student s = (Student) user;
-                saveGrade(s, gc5, 17.0, 16.5);
-                saveGrade(s, gc6, 18.5, 17.0);
-                saveGrade(s, gc7, 14.0, 13.0);
-            });
-
-            log.info("Grade configs and student grades seeded");
-        };
-    }
-
-    @Bean
     @Order(5)
     CommandLineRunner seedSkills() {
         return args -> {
@@ -432,24 +381,6 @@ public class DataInitializer {
                 .startTime(LocalTime.parse(start))
                 .endTime(LocalTime.parse(end))
                 .room(room).instructor(instructor).slotType(type)
-                .build());
-    }
-
-    private GradeConfig saveGradeConfig(String code, String name, String dept,
-                                         double ccW, double examW, int credits, int semester) {
-        return gradeConfigRepository.save(GradeConfig.builder()
-                .moduleCode(code).moduleName(name).department(dept)
-                .ccWeight(ccW).examWeight(examW).credits(credits).semester(semester)
-                .build());
-    }
-
-    private void saveGrade(Student student, GradeConfig config, double cc, double exam) {
-        double finalMark = config.getCcWeight() * cc + config.getExamWeight() * exam;
-        studentGradeRepository.save(StudentGrade.builder()
-                .student(student).gradeConfig(config)
-                .ccMark(cc).examMark(exam)
-                .finalMark(Math.round(finalMark * 100.0) / 100.0)
-                .passed(finalMark >= 10.0)
                 .build());
     }
 

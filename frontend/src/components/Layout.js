@@ -17,44 +17,46 @@ const Layout = ({ children }) => {
   }, [user]);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden">
       <Sidebar unread={unread} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top header */}
-        <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 flex-shrink-0">
-          <div className="flex-1 max-w-md">
+        <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 shadow-sm">
+          <div className="flex-1 max-w-sm">
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-9 pr-4 py-1.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                className="w-full pl-9 pr-4 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 focus:bg-white transition text-slate-900 placeholder-slate-400"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <Link to="/notifications" className="relative text-gray-500 hover:text-blue-600 transition">
+            <Link to="/notifications" className="relative text-slate-500 hover:text-primary-600 transition">
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
               </svg>
               {unread > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-semibold">
+                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-semibold">
                   {unread > 9 ? '9+' : unread}
                 </span>
               )}
             </Link>
 
+            <div className="w-px h-5 bg-slate-200"/>
+
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
               <div className="hidden sm:block">
-                <p className="text-sm font-semibold text-gray-800">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs text-gray-400">{user?.role?.replace('_', ' ')}</p>
+                <p className="text-sm font-semibold text-slate-800 leading-tight">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs text-slate-400 leading-tight">{user?.role?.replace('_', ' ')}</p>
               </div>
             </div>
           </div>
