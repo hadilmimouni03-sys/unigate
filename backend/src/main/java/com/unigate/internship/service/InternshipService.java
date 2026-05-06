@@ -173,6 +173,9 @@ public class InternshipService {
                 .status(o.getStatus())
                 .applicationDeadline(o.getApplicationDeadline())
                 .publishedAt(o.getPublishedAt())
+                .location(o.getCompany().getLocation())
+                .contactEmail(o.getCompany().getContactEmail())
+                .companyWebsite(o.getCompany().getWebsite())
                 .build();
     }
 

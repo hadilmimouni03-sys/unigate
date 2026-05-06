@@ -25,4 +25,6 @@ public class OfferDTO {
     private LocalDate applicationDeadline;
     private LocalDateTime publishedAt;
     private String location;
+    private String contactEmail;
+    private String companyWebsite;
 }

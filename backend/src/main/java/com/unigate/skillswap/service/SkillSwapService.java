@@ -53,9 +53,11 @@ public class SkillSwapService {
     }
 
     @Transactional(readOnly = true)
-    public List<SkillOfferDTO> getMarketplace() {
+    public List<SkillOfferDTO> getMarketplace(Long currentUserId) {
         return offerRepository.findByActiveTrueOrderByCreatedAtDesc()
-                .stream().map(this::toOfferDTO).collect(Collectors.toList());
+                .stream()
+                .filter(o -> currentUserId == null || !o.getStudent().getId().equals(currentUserId))
+                .map(this::toOfferDTO).collect(Collectors.toList());
     }
 
     /** Find best matches for a student's offer, ranked by weighted score */

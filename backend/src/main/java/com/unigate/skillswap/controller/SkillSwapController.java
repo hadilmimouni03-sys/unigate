@@ -28,8 +28,9 @@ public class SkillSwapController {
     }
 
     @GetMapping("/marketplace")
-    public ResponseEntity<List<SkillOfferDTO>> marketplace() {
-        return ResponseEntity.ok(skillSwapService.getMarketplace());
+    public ResponseEntity<List<SkillOfferDTO>> marketplace(@AuthenticationPrincipal User user) {
+        Long currentUserId = user != null ? user.getId() : null;
+        return ResponseEntity.ok(skillSwapService.getMarketplace(currentUserId));
     }
 
     @GetMapping("/matches")
