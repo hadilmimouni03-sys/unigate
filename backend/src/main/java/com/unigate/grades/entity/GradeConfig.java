@@ -15,10 +15,9 @@ public class GradeConfig {
     @Column(nullable = false) private String moduleName;
     private String department;
 
-    /** CC weight as a fraction (e.g. 0.4 for 40%) */
     @Column(nullable = false) private double ccWeight;
-    /** Exam weight as a fraction (e.g. 0.6 for 60%) */
     @Column(nullable = false) private double examWeight;
+    @Builder.Default private double tpWeight = 0.0;
 
     private int credits;
     private int semester;

@@ -10,4 +10,5 @@ public interface GradeConfigRepository extends JpaRepository<GradeConfig, Long> 
     Optional<GradeConfig> findByModuleCode(String moduleCode);
     List<GradeConfig> findBySemester(int semester);
     List<GradeConfig> findByDepartment(String department);
+    List<GradeConfig> findByDepartmentAndSemester(String department, int semester);
 }

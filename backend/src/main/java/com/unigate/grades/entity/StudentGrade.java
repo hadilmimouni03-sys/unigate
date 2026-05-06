@@ -23,14 +23,15 @@ public class StudentGrade {
     @JoinColumn(name = "grade_config_id", nullable = false)
     private GradeConfig gradeConfig;
 
-    /** Continuous assessment mark (0-20) */
     private Double ccMark;
-    /** Final exam mark (0-20) */
     private Double examMark;
-    /** Computed final mark: ccWeight*cc + examWeight*exam */
+    private Double tpMark;
     private Double finalMark;
-    /** True when student passes (finalMark >= 10) */
     private Boolean passed;
+    private String requiredExamToPass;
+
+    /** True when an admin entered this grade — students cannot overwrite admin-entered grades. */
+    @Builder.Default private boolean adminEntered = false;
 
     @Column(updatable = false)
     private LocalDateTime enteredAt;
