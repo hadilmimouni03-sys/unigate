@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import ApplicationReview from './ApplicationReview';
 
 const STATUS_CONFIG = {
@@ -29,6 +30,9 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [search, setSearch] = useState('');
+
+  const { user } = useAuth();
+  const dept = user?.department;
 
   useEffect(() => { loadApplications(); }, [filterStatus]);
 
@@ -73,6 +77,14 @@ const AdminDashboard = () => {
         <div className="relative z-10">
           <h1 className="text-2xl font-bold mb-1">Applications Dashboard</h1>
           <p className="text-slate-300 text-sm">Manage and review student registration applications</p>
+          {dept && (
+            <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+              {dept} Department
+            </span>
+          )}
         </div>
       </div>
 
