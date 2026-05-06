@@ -1,13 +1,17 @@
 package com.unigate.grades.dto;
 
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class SimulationRequest {
-    @NotBlank private String moduleCode;
-    @DecimalMin("0.0") @DecimalMax("20.0") private double ccMark;
-    @DecimalMin("0.0") @DecimalMax("20.0") private double examMark;
+    private List<SubjectMarkInput> grades;
+
+    @Data
+    public static class SubjectMarkInput {
+        private String moduleCode;
+        private Double ccMark;
+        private Double examMark;
+        private Double tpMark;
+    }
 }

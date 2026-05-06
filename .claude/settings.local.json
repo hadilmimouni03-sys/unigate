@@ -3,7 +3,18 @@
     "allow": [
       "mcp__plugin_figma_figma__get_screenshot",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(./mvnw clean *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Hadil\\\\OneDrive\\\\Desktop\\\\2eme_cycle_info\\\\S2\\\\spring\\\\unigate\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep -l -i \"grade\\\\|note\")",
+      "Bash(mvn compile *)",
+      "Bash(Get-ChildItem -Recurse -Path src/main/java, src/main/resources)",
+      "Bash(Select-Object -First 50)",
+      "Bash(mvn clean *)",
+      "Bash(java --version)",
+      "Bash(docker-compose build *)",
+      "Bash(docker-compose up *)"
     ]
   }
 }

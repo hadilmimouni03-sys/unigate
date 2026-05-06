@@ -24,4 +24,6 @@ public class GradeDTO {
     private Boolean passed;
     private String requiredExamToPass;
     private boolean adminEntered;
+    private double coefficient;
+    private String parentModuleName;
 }

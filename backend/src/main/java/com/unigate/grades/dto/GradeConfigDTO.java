@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class GradeConfigDTO {
     private Long id;
@@ -16,4 +17,6 @@ public class GradeConfigDTO {
     private double tpWeight;
     private int credits;
     private int semester;
+    @Builder.Default private double coefficient = 1.0;
+    private String parentModuleName;
 }

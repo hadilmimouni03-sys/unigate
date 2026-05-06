@@ -28,7 +28,8 @@ const ROLES = [
       </svg>
     ),
     demos: [
-      { label: 'Department Admin', email: 'admin@unigate.com', pwd: 'Admin@1234' },
+      { label: 'Admin CS',  email: 'admin.cs@unigate.com', pwd: 'Admin@1234' },
+      { label: 'Admin GI',  email: 'admin.gi@unigate.com', pwd: 'Admin@1234' },
     ],
   },
   {

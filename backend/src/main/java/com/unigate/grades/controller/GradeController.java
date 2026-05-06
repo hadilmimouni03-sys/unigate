@@ -12,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/grades")
@@ -80,9 +79,17 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.saveConfigs(dtos, dept));
     }
 
+    /** Student fetches all module configs for their department (to display empty rows before entering grades) */
+    @GetMapping("/subjects")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<List<GradeConfigDTO>> getMySubjects(
+            @RequestParam(required = false) Integer semester,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(gradeService.getConfigs(user.getDepartment(), semester));
+    }
+
     @PostMapping("/simulate")
-    public ResponseEntity<Map<String, Object>> simulate(@Valid @RequestBody SimulationRequest request) {
-        return ResponseEntity.ok(gradeService.simulate(
-                request.getModuleCode(), request.getCcMark(), request.getExamMark()));
+    public ResponseEntity<SimulationResult> simulate(@RequestBody SimulationRequest request) {
+        return ResponseEntity.ok(gradeService.simulateFull(request));
     }
 }

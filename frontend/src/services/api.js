@@ -88,6 +88,8 @@ export const timetableApi = {
 
 export const gradeApi = {
   myGrades: () => api.get('/api/grades/my'),
+  mySubjects: (semester) =>
+    api.get('/api/grades/subjects', { params: semester ? { semester } : {} }),
   enterMyGrade: (data) => api.post('/api/grades/my', data),
   studentGrades: (studentId, semester) =>
     api.get(`/api/grades/student/${studentId}`, { params: semester ? { semester } : {} }),

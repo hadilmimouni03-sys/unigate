@@ -14,8 +14,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,8 +24,8 @@ public class GradeService {
     private static final double PASSING_MARK = 10.0;
 
     private final StudentGradeRepository gradeRepository;
-    private final GradeConfigRepository configRepository;
-    private final StudentRepository studentRepository;
+    private final GradeConfigRepository  configRepository;
+    private final StudentRepository      studentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     // ── Admin: enter official grade for a student ──────────────────────────
@@ -55,7 +54,7 @@ public class GradeService {
         return toDTO(grade);
     }
 
-    // ── Student: self-enter simulation grades ─────────────────────────────
+    // ── Student: self-enter saved grades ──────────────────────────────────
     @Transactional
     public GradeDTO enterMyGrade(Long studentId, StudentGradeEntryRequest request) {
         GradeConfig config = configRepository.findByModuleCode(request.getModuleCode())
@@ -115,27 +114,160 @@ public class GradeService {
             config.setTpWeight(dto.getTpWeight() / 100.0);
             config.setCredits(dto.getCredits());
             config.setSemester(dto.getSemester());
+            config.setCoefficient(dto.getCoefficient() > 0 ? dto.getCoefficient() : 1.0);
+            config.setParentModuleName(dto.getParentModuleName());
             return toConfigDTO(configRepository.save(config));
         }).collect(Collectors.toList());
     }
 
-    // ── Simulation (public) ───────────────────────────────────────────────
-    public Map<String, Object> simulate(String moduleCode, double ccMark, double examMark) {
-        GradeConfig config = configRepository.findByModuleCode(moduleCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Module " + moduleCode + " not found"));
-        double finalMark = config.getCcWeight() * ccMark + config.getExamWeight() * examMark;
-        return Map.of(
-                "finalMark", Math.round(finalMark * 100.0) / 100.0,
-                "passed", finalMark >= PASSING_MARK,
-                "requiredExamToPass", computeRequiredExam(config, ccMark)
-        );
+    // ── Simulation (pure calculation, no persistence) ─────────────────────
+    /**
+     * Computes the full Subject → Module → Semester hierarchy from the supplied
+     * hypothetical marks. All weights/coefficients come from GradeConfig (DB).
+     * Nothing is saved.
+     */
+    public SimulationResult simulateFull(SimulationRequest request) {
+        if (request.getGrades() == null || request.getGrades().isEmpty()) {
+            return SimulationResult.builder()
+                    .semesters(List.of()).overallGpa(null)
+                    .totalCredits(0).earnedCredits(0).lostCredits(0).build();
+        }
+
+        List<String> codes = request.getGrades().stream()
+                .map(SimulationRequest.SubjectMarkInput::getModuleCode)
+                .collect(Collectors.toList());
+
+        Map<String, GradeConfig> configMap = configRepository.findByModuleCodeIn(codes).stream()
+                .collect(Collectors.toMap(GradeConfig::getModuleCode, c -> c));
+
+        // ── 1. Subject results ────────────────────────────────────────────
+        List<SimulationResult.SubjectResult> subjects = new ArrayList<>();
+        for (SimulationRequest.SubjectMarkInput input : request.getGrades()) {
+            GradeConfig c = configMap.get(input.getModuleCode());
+            if (c == null) continue;
+
+            Double cc   = input.getCcMark();
+            Double exam = input.getExamMark();
+            Double tp   = input.getTpMark();
+
+            Double avg = null;
+            boolean passed = false;
+            String requiredExam = null;
+
+            if (cc != null && exam != null) {
+                double tpContrib = (c.getTpWeight() > 0 && tp != null) ? c.getTpWeight() * tp : 0.0;
+                double raw = c.getCcWeight() * cc + c.getExamWeight() * exam + tpContrib;
+                avg = round2(raw);
+                passed = avg >= PASSING_MARK;
+                requiredExam = computeRequiredExam(c, cc, tp);
+            }
+
+            subjects.add(SimulationResult.SubjectResult.builder()
+                    .moduleCode(c.getModuleCode())
+                    .subjectName(c.getModuleName())
+                    .semester(c.getSemester())
+                    .subjectAvg(avg)
+                    .coefficient(c.getCoefficient())
+                    .credits(c.getCredits())
+                    .ccMark(cc).examMark(exam).tpMark(tp)
+                    .ccWeight(c.getCcWeight() * 100)
+                    .examWeight(c.getExamWeight() * 100)
+                    .tpWeight(c.getTpWeight() * 100)
+                    .passed(passed)
+                    .requiredExam(requiredExam)
+                    .build());
+        }
+
+        // ── 2. Group: semester → module ───────────────────────────────────
+        Map<Integer, List<SimulationResult.SubjectResult>> bySemester = subjects.stream()
+                .collect(Collectors.groupingBy(SimulationResult.SubjectResult::getSemester));
+
+        List<SimulationResult.SemesterResult> semesterResults = new ArrayList<>();
+        int totalCredits = 0, earnedCredits = 0, lostCredits = 0;
+        double gpaWeightedSum = 0;
+        int gpaWeightedCredits = 0;
+
+        for (int sem : bySemester.keySet().stream().sorted().collect(Collectors.toList())) {
+            List<SimulationResult.SubjectResult> semSubjects = bySemester.get(sem);
+
+            Map<String, List<SimulationResult.SubjectResult>> byModule = semSubjects.stream()
+                    .collect(Collectors.groupingBy(s -> {
+                        GradeConfig c = configMap.get(s.getModuleCode());
+                        return (c.getParentModuleName() != null && !c.getParentModuleName().isBlank())
+                                ? c.getParentModuleName() : c.getModuleName();
+                    }));
+
+            List<SimulationResult.ModuleResult> moduleResults = new ArrayList<>();
+            int semEarned = 0, semTotal = 0;
+            double semWeighted = 0;
+            int semWeightedCred = 0;
+
+            for (Map.Entry<String, List<SimulationResult.SubjectResult>> modEntry : byModule.entrySet()) {
+                List<SimulationResult.SubjectResult> modSubjects = modEntry.getValue();
+                int modCredits = modSubjects.stream().mapToInt(SimulationResult.SubjectResult::getCredits).sum();
+
+                Double moduleAvg = null;
+                if (modSubjects.stream().allMatch(s -> s.getSubjectAvg() != null)) {
+                    double coeffSum  = modSubjects.stream().mapToDouble(SimulationResult.SubjectResult::getCoefficient).sum();
+                    double weightedSum = modSubjects.stream()
+                            .mapToDouble(s -> s.getSubjectAvg() * s.getCoefficient()).sum();
+                    moduleAvg = coeffSum > 0 ? round2(weightedSum / coeffSum) : null;
+                }
+
+                boolean modPassed = moduleAvg != null && moduleAvg >= PASSING_MARK;
+                semTotal    += modCredits;
+                totalCredits += modCredits;
+                if (modPassed) {
+                    semEarned    += modCredits;
+                    earnedCredits += modCredits;
+                } else {
+                    lostCredits += modCredits;
+                }
+                if (moduleAvg != null) {
+                    semWeighted     += moduleAvg * modCredits;
+                    semWeightedCred += modCredits;
+                }
+
+                moduleResults.add(SimulationResult.ModuleResult.builder()
+                        .moduleName(modEntry.getKey())
+                        .moduleAvg(moduleAvg)
+                        .passed(modPassed)
+                        .credits(modCredits)
+                        .subjects(modSubjects)
+                        .build());
+            }
+
+            Double semAvg = semWeightedCred > 0 ? round2(semWeighted / semWeightedCred) : null;
+            if (semAvg != null) {
+                gpaWeightedSum    += semAvg * semWeightedCred;
+                gpaWeightedCredits += semWeightedCred;
+            }
+
+            semesterResults.add(SimulationResult.SemesterResult.builder()
+                    .semester(sem)
+                    .semesterAvg(semAvg)
+                    .earnedCredits(semEarned)
+                    .totalCredits(semTotal)
+                    .modules(moduleResults)
+                    .build());
+        }
+
+        Double overallGpa = gpaWeightedCredits > 0 ? round2(gpaWeightedSum / gpaWeightedCredits) : null;
+
+        return SimulationResult.builder()
+                .semesters(semesterResults)
+                .overallGpa(overallGpa)
+                .totalCredits(totalCredits)
+                .earnedCredits(earnedCredits)
+                .lostCredits(lostCredits)
+                .build();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────
     private void applyComputed(StudentGrade grade, GradeConfig config) {
-        Double cc = grade.getCcMark();
+        Double cc   = grade.getCcMark();
         Double exam = grade.getExamMark();
-        Double tp = grade.getTpMark();
+        Double tp   = grade.getTpMark();
         if (cc == null || exam == null) {
             grade.setFinalMark(null);
             grade.setPassed(null);
@@ -143,19 +275,22 @@ public class GradeService {
             return;
         }
         double tpContrib = (config.getTpWeight() > 0 && tp != null) ? config.getTpWeight() * tp : 0;
-        double finalMark = config.getCcWeight() * cc + config.getExamWeight() * exam + tpContrib;
-        finalMark = Math.round(finalMark * 100.0) / 100.0;
+        double finalMark = round2(config.getCcWeight() * cc + config.getExamWeight() * exam + tpContrib);
         grade.setFinalMark(finalMark);
         grade.setPassed(finalMark >= PASSING_MARK);
-        grade.setRequiredExamToPass(computeRequiredExam(config, cc));
+        grade.setRequiredExamToPass(computeRequiredExam(config, cc, tp));
     }
 
-    private String computeRequiredExam(GradeConfig config, double ccMark) {
-        double required = (PASSING_MARK - config.getCcWeight() * ccMark) / config.getExamWeight();
+    /** Returns "IMPOSSIBLE", "ALREADY_VALIDATED", or "X.XX". */
+    private String computeRequiredExam(GradeConfig config, double ccMark, Double tpMark) {
+        double tpPart = (config.getTpWeight() > 0 && tpMark != null) ? config.getTpWeight() * tpMark : 0.0;
+        double required = (PASSING_MARK - config.getCcWeight() * ccMark - tpPart) / config.getExamWeight();
         if (required > 20.0) return "IMPOSSIBLE";
-        if (required < 0.0) return "0.00";
+        if (required <= 0.0) return "ALREADY_VALIDATED";
         return String.format("%.2f", required);
     }
+
+    private static double round2(double v) { return Math.round(v * 100.0) / 100.0; }
 
     private GradeDTO toDTO(StudentGrade g) {
         GradeConfig c = g.getGradeConfig();
@@ -170,6 +305,8 @@ public class GradeService {
                 .ccWeight(c.getCcWeight() * 100)
                 .examWeight(c.getExamWeight() * 100)
                 .tpWeight(c.getTpWeight() * 100)
+                .coefficient(c.getCoefficient())
+                .parentModuleName(c.getParentModuleName())
                 .ccMark(g.getCcMark())
                 .examMark(g.getExamMark())
                 .tpMark(g.getTpMark())
@@ -191,6 +328,8 @@ public class GradeService {
                 .tpWeight(c.getTpWeight() * 100)
                 .credits(c.getCredits())
                 .semester(c.getSemester())
+                .coefficient(c.getCoefficient())
+                .parentModuleName(c.getParentModuleName())
                 .build();
     }
 }

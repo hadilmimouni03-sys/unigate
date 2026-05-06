@@ -73,24 +73,25 @@ public class DataInitializer {
     CommandLineRunner seedDefaultUsers() {
         return args -> {
             String encoded = passwordEncoder.encode("Admin@1234");
-            ensureAdminUser("Super", "Admin", "superadmin@unigate.com", encoded, Role.SUPER_ADMIN);
-            ensureAdminUser("Department", "Admin", "admin@unigate.com", encoded, Role.ADMIN);
-            log.info("Admin users ensured — login: admin@unigate.com / Admin@1234");
+            ensureAdminUser("Super",  "Admin", "superadmin@unigate.com", encoded, Role.SUPER_ADMIN, null);
+            ensureAdminUser("Admin",  "CS",    "admin.cs@unigate.com",   encoded, Role.ADMIN, "Computer Science");
+            ensureAdminUser("Admin",  "GI",    "admin.gi@unigate.com",   encoded, Role.ADMIN, "Génie Industriel");
+            log.info("Admins — superadmin@unigate.com | admin.cs@unigate.com | admin.gi@unigate.com — pwd: Admin@1234");
         };
     }
 
-    private void ensureAdminUser(String first, String last, String email, String pwd, Role role) {
+    private void ensureAdminUser(String first, String last, String email, String pwd, Role role, String department) {
         userRepository.findByEmail(email).ifPresentOrElse(
             u -> {
-                // Fix stale rows that were seeded with enabled=false
-                if (!u.isEnabled() || !u.isAccountNonLocked()) {
-                    u.setEnabled(true);
-                    u.setAccountNonLocked(true);
-                    userRepository.save(u);
-                    log.info("Fixed disabled admin account: {}", email);
-                }
+                // Always sync password/state so Docker rebuilds never get stale credentials
+                u.setPassword(pwd);
+                u.setEnabled(true);
+                u.setAccountNonLocked(true);
+                if (department != null) u.setDepartment(department);
+                userRepository.save(u);
+                log.info("Synced admin account: {}", email);
             },
-            () -> userRepository.save(buildUser(first, last, email, pwd, role))
+            () -> userRepository.save(buildUser(first, last, email, pwd, role, department))
         );
     }
 
@@ -161,7 +162,43 @@ public class DataInitializer {
                     .build();
             applicationRepository.save(a5);
 
-            log.info("Students seeded — login: ahmed.ben.ali@student.unigate.com / Student@1234");
+            log.info("CS students seeded — login: ahmed.ben.ali@student.unigate.com / Student@1234");
+        };
+    }
+
+    @Bean
+    @Order(4)
+    CommandLineRunner seedGIStudents() {
+        return args -> {
+            if (userRepository.existsByEmail("karim.hamdi@student.unigate.com")) return;
+
+            String pwd = passwordEncoder.encode("Student@1234");
+
+            // GI Student 1: 3rd year — APPROVED
+            Student gi1 = buildStudent("Karim", "Hamdi", "karim.hamdi@student.unigate.com", pwd,
+                    RegistrationType.THIRD_YEAR_ING, "Génie Industriel", "Production Industrielle", null, null, null);
+            userRepository.save(gi1);
+            applicationRepository.save(Application.builder()
+                    .student(gi1).registrationType(RegistrationType.THIRD_YEAR_ING)
+                    .status(ApplicationStatus.APPROVED)
+                    .submittedAt(LocalDateTime.now().minusDays(15))
+                    .reviewStartedAt(LocalDateTime.now().minusDays(13))
+                    .decidedAt(LocalDateTime.now().minusDays(7))
+                    .build());
+
+            // GI Student 2: Master M1 — APPROVED
+            Student gi2 = buildStudent("Nadia", "Slama", "nadia.slama@student.unigate.com", pwd,
+                    RegistrationType.MASTER_M1, "Génie Industriel", "Logistique", null, null, null);
+            userRepository.save(gi2);
+            applicationRepository.save(Application.builder()
+                    .student(gi2).registrationType(RegistrationType.MASTER_M1)
+                    .status(ApplicationStatus.APPROVED)
+                    .submittedAt(LocalDateTime.now().minusDays(10))
+                    .reviewStartedAt(LocalDateTime.now().minusDays(8))
+                    .decidedAt(LocalDateTime.now().minusDays(3))
+                    .build());
+
+            log.info("GI students seeded — karim.hamdi@student.unigate.com / Student@1234");
         };
     }
 
@@ -350,10 +387,11 @@ public class DataInitializer {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private com.unigate.registration.entity.User buildUser(String first, String last, String email, String pwd, Role role) {
+    private com.unigate.registration.entity.User buildUser(String first, String last, String email, String pwd, Role role, String department) {
         com.unigate.registration.entity.User u = new com.unigate.registration.entity.User();
         u.setFirstName(first); u.setLastName(last); u.setEmail(email);
-        u.setPassword(pwd); u.setRole(role); u.setEnabled(true); u.setAccountNonLocked(true);
+        u.setPassword(pwd); u.setRole(role); u.setDepartment(department);
+        u.setEnabled(true); u.setAccountNonLocked(true);
         return u;
     }
 
