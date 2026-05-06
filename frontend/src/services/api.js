@@ -88,10 +88,21 @@ export const timetableApi = {
 
 export const gradeApi = {
   myGrades: () => api.get('/api/grades/my'),
+  enterMyGrade: (data) => api.post('/api/grades/my', data),
   studentGrades: (studentId, semester) =>
     api.get(`/api/grades/student/${studentId}`, { params: semester ? { semester } : {} }),
   enter: (data) => api.post('/api/grades', data),
   simulate: (data) => api.post('/api/grades/simulate', data),
+  getConfig: (department, semester) =>
+    api.get('/api/grades/config', { params: { department, semester } }),
+  saveConfig: (configs) => api.put('/api/grades/config', configs),
+};
+
+export const eligibilityApi = {
+  getRules: (department, yearLevel) =>
+    api.get('/api/eligibility/rules', { params: { department, yearLevel } }),
+  saveRules: (yearLevel, rules) =>
+    api.put('/api/eligibility/rules', rules, { params: { yearLevel } }),
 };
 
 export const skillSwapApi = {
