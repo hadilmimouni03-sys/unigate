@@ -80,6 +80,7 @@ public class AuthService {
     }
 
     private AuthResponse buildResponse(User user, String accessToken, String refreshToken) {
+        String dept = (user instanceof Student s) ? s.getDepartment() : user.getDepartment();
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -88,6 +89,7 @@ public class AuthService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole())
+                .department(dept)
                 .build();
     }
 }

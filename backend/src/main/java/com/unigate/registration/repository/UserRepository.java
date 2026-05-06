@@ -16,6 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     List<User> findByRole(Role role);
     Optional<User> findByEmailVerificationToken(String token);
+    List<User> findByRoleAndDepartment(Role role, String department);
 
     @Modifying
     @Query("UPDATE User u SET u.enabled = true, u.accountNonLocked = true WHERE u.enabled = false OR u.accountNonLocked = false")

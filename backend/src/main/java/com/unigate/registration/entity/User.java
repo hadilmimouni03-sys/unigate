@@ -36,6 +36,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
+    private String department;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean enabled = true;
