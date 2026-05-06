@@ -136,6 +136,18 @@ public class ApplicationService {
         return applicationRepository.findByStatus(status).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<ApplicationDTO> getAllByDepartment(String department) {
+        return applicationRepository.findByStudentDepartment(department)
+                .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApplicationDTO> getByStatusAndDepartment(ApplicationStatus status, String department) {
+        return applicationRepository.findByStatusAndStudentDepartment(status, department)
+                .stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     private Application getAppOwnedBy(Long applicationId, Long studentId) {
         Application app = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application", applicationId));

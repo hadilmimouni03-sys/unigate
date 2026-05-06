@@ -16,6 +16,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     Optional<Application> findByStudentId(Long studentId);
     List<Application> findByStatus(ApplicationStatus status);
     List<Application> findByReviewerId(Long reviewerId);
+    List<Application> findByStudentDepartment(String department);
+    List<Application> findByStatusAndStudentDepartment(ApplicationStatus status, String department);
 
     @Query("SELECT a FROM Application a WHERE a.status = 'UNDER_REVIEW' AND a.reviewStartedAt < :cutoff")
     List<Application> findSlaBreached(@Param("cutoff") LocalDateTime cutoff);
