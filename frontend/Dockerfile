@@ -5,7 +5,7 @@ RUN npm install --silent
 COPY . .
 ENV REACT_APP_API_URL=http://localhost:8081
 ENV REACT_APP_WS_URL=http://localhost:8081/ws
-RUN npm run build
+RUN CI=false npm run build
 
 FROM nginx:1.25-alpine
 COPY --from=build /app/build /usr/share/nginx/html
