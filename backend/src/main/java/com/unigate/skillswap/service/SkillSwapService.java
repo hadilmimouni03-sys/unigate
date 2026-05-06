@@ -71,8 +71,12 @@ public class SkillSwapService {
 
         return offerRepository.findActiveOffersWithSkills(wantedIds).stream()
                 .filter(o -> !o.getStudent().getId().equals(studentId))
-                .sorted(Comparator.comparingDouble(o -> -computeScore(myOffer, o)))
-                .map(this::toOfferDTO)
+                .map(o -> {
+                    SkillOfferDTO dto = toOfferDTO(o);
+                    dto.setMatchScore(computeScore(myOffer, o));
+                    return dto;
+                })
+                .sorted(Comparator.comparingDouble(dto -> -dto.getMatchScore()))
                 .collect(Collectors.toList());
     }
 
@@ -186,10 +190,13 @@ public class SkillSwapService {
 
     private SkillOfferDTO toOfferDTO(SkillOffer o) {
         Double avg = ratingRepository.findAverageScoreByRateeId(o.getStudent().getId());
+        Long rateeId = o.getStudent().getId();
+        int reviewCount = ratingRepository.countByRateeId(rateeId);
         return SkillOfferDTO.builder()
                 .id(o.getId())
                 .studentId(o.getStudent().getId())
                 .studentName(o.getStudent().getFullName())
+                .department(o.getStudent().getDepartment())
                 .skillsOffered(o.getSkillsOffered().stream().map(Skill::getName).collect(Collectors.toSet()))
                 .skillsWanted(o.getSkillsWanted().stream().map(Skill::getName).collect(Collectors.toSet()))
                 .description(o.getDescription())
@@ -197,6 +204,7 @@ public class SkillSwapService {
                 .active(o.isActive())
                 .createdAt(o.getCreatedAt())
                 .averageRating(avg)
+                .reviewCount(reviewCount)
                 .build();
     }
 

@@ -9,6 +9,8 @@ import java.util.List;
 public interface SwapRatingRepository extends JpaRepository<SwapRating, Long> {
     List<SwapRating> findByRateeId(Long rateeId);
 
+    int countByRateeId(Long rateeId);
+
     @Query("SELECT AVG(r.score) FROM SwapRating r WHERE r.ratee.id = :rateeId")
     Double findAverageScoreByRateeId(Long rateeId);
 }

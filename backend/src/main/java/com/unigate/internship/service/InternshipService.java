@@ -79,6 +79,8 @@ public class InternshipService {
                 .description(dto.getDescription())
                 .requiredDepartment(dto.getRequiredDepartment())
                 .requiredSpeciality(dto.getRequiredSpeciality())
+                .internshipType(dto.getInternshipType())
+                .targetYear(dto.getTargetYear())
                 .durationMonths(dto.getDurationMonths())
                 .applicationDeadline(dto.getApplicationDeadline())
                 .build();
@@ -165,6 +167,8 @@ public class InternshipService {
                 .description(o.getDescription())
                 .requiredDepartment(o.getRequiredDepartment())
                 .requiredSpeciality(o.getRequiredSpeciality())
+                .internshipType(o.getInternshipType())
+                .targetYear(o.getTargetYear())
                 .durationMonths(o.getDurationMonths())
                 .status(o.getStatus())
                 .applicationDeadline(o.getApplicationDeadline())

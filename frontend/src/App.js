@@ -14,6 +14,8 @@ import TimetablePage from './pages/timetable/TimetablePage';
 import GradesPage from './pages/grades/GradesPage';
 import SkillSwapPage from './pages/skillswap/SkillSwapPage';
 import InternshipsPage from './pages/internship/InternshipsPage';
+import GradeConfigPage from './pages/admin/GradeConfigPage';
+import EligibilityRulesPage from './pages/admin/EligibilityRulesPage';
 
 const HomeRedirect = () => {
   const { user } = useAuth();
@@ -38,13 +40,15 @@ const App = () => (
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/home"     element={<HomeRedirect />} />
 
-          <Route path="/student"       element={withLayout(StudentDashboard, ['STUDENT'])} />
-          <Route path="/admin"         element={withLayout(AdminDashboard,   ['ADMIN','SUPER_ADMIN'])} />
-          <Route path="/timetable"     element={withLayout(TimetablePage,    null)} />
-          <Route path="/grades"        element={withLayout(GradesPage,       null)} />
-          <Route path="/skillswap"     element={withLayout(SkillSwapPage,    null)} />
-          <Route path="/internships"   element={withLayout(InternshipsPage,  null)} />
-          <Route path="/notifications" element={withLayout(NotificationsPage, null)} />
+          <Route path="/student"            element={withLayout(StudentDashboard,    ['STUDENT'])} />
+          <Route path="/admin"              element={withLayout(AdminDashboard,      ['ADMIN','SUPER_ADMIN'])} />
+          <Route path="/admin/grade-config" element={withLayout(GradeConfigPage,     ['ADMIN','SUPER_ADMIN'])} />
+          <Route path="/admin/eligibility"  element={withLayout(EligibilityRulesPage,['ADMIN','SUPER_ADMIN'])} />
+          <Route path="/timetable"          element={withLayout(TimetablePage,       null)} />
+          <Route path="/grades"             element={withLayout(GradesPage,          null)} />
+          <Route path="/skillswap"          element={withLayout(SkillSwapPage,       null)} />
+          <Route path="/internships"        element={withLayout(InternshipsPage,     null)} />
+          <Route path="/notifications"      element={withLayout(NotificationsPage,   null)} />
 
           <Route path="/unauthorized" element={
             <div className="min-h-screen flex items-center justify-center bg-slate-50">

@@ -3,16 +3,25 @@ import { adminApi } from '../../services/api';
 import ApplicationReview from './ApplicationReview';
 
 const STATUS_CONFIG = {
-  DRAFT:        { bg: 'bg-gray-100',   text: 'text-gray-600',   dot: 'bg-gray-400' },
-  SUBMITTED:    { bg: 'bg-blue-100',   text: 'text-blue-700',   dot: 'bg-blue-500' },
-  UNDER_REVIEW: { bg: 'bg-amber-100',  text: 'text-amber-700',  dot: 'bg-amber-500' },
-  INCOMPLETE:   { bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
-  APPROVED:     { bg: 'bg-green-100',  text: 'text-green-700',  dot: 'bg-green-500' },
-  REFUSED:      { bg: 'bg-red-100',    text: 'text-red-700',    dot: 'bg-red-500' },
+  DRAFT:        { bg: 'bg-slate-100',  text: 'text-slate-600',   dot: 'bg-slate-400' },
+  SUBMITTED:    { bg: 'bg-blue-100',   text: 'text-blue-700',    dot: 'bg-blue-500' },
+  UNDER_REVIEW: { bg: 'bg-amber-100',  text: 'text-amber-700',   dot: 'bg-amber-500' },
+  INCOMPLETE:   { bg: 'bg-orange-100', text: 'text-orange-700',  dot: 'bg-orange-500' },
+  APPROVED:     { bg: 'bg-green-100',  text: 'text-green-700',   dot: 'bg-green-500' },
+  REFUSED:      { bg: 'bg-red-100',    text: 'text-red-700',     dot: 'bg-red-500' },
 };
 
 const STATUSES = ['', 'SUBMITTED', 'UNDER_REVIEW', 'INCOMPLETE', 'APPROVED', 'REFUSED'];
 const FILTER_LABELS = { '': 'All', SUBMITTED: 'Pending', UNDER_REVIEW: 'In Review', INCOMPLETE: 'Incomplete', APPROVED: 'Approved', REFUSED: 'Refused' };
+
+const STAT_CARDS = [
+  { key: 'total',      label: 'Total',      icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', color: 'from-slate-500 to-slate-600', iconColor: 'text-slate-200' },
+  { key: 'submitted',  label: 'Pending',    icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',                                                                                                                                                                                                  color: 'from-blue-500 to-blue-600',  iconColor: 'text-blue-200' },
+  { key: 'underReview',label: 'In Review',  icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z',                                                                                  color: 'from-amber-400 to-amber-500', iconColor: 'text-amber-100' },
+  { key: 'incomplete', label: 'Incomplete', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',                                                                                                       color: 'from-orange-400 to-orange-500', iconColor: 'text-orange-100' },
+  { key: 'approved',   label: 'Approved',   icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',                                                                                                                                                                                               color: 'from-green-500 to-emerald-500', iconColor: 'text-green-100' },
+  { key: 'refused',    label: 'Refused',    icon: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',                                                                                                                                                                        color: 'from-red-500 to-red-600',      iconColor: 'text-red-100' },
+];
 
 const AdminDashboard = () => {
   const [applications, setApplications] = useState([]);
@@ -56,105 +65,110 @@ const AdminDashboard = () => {
   });
 
   return (
-    <div className="px-6 py-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Applications Dashboard</h1>
-      <p className="text-gray-500 text-sm mb-6">Manage and review student registration applications</p>
+    <div className="p-6 space-y-6">
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-7">
-        {[
-          { label: 'Total', value: stats.total, gradient: 'from-slate-500 to-gray-600' },
-          { label: 'Pending', value: stats.submitted, gradient: 'from-blue-500 to-indigo-500' },
-          { label: 'In Review', value: stats.underReview, gradient: 'from-amber-400 to-orange-500' },
-          { label: 'Incomplete', value: stats.incomplete, gradient: 'from-orange-500 to-red-400' },
-          { label: 'Approved', value: stats.approved, gradient: 'from-green-500 to-emerald-500' },
-          { label: 'Refused', value: stats.refused, gradient: 'from-red-500 to-rose-600' },
-        ].map(({ label, value, gradient }) => (
-          <div key={label} className={`bg-gradient-to-br ${gradient} rounded-2xl p-4 text-white shadow-sm`}>
-            <p className="text-2xl font-bold">{value}</p>
+      {/* Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 rounded-2xl p-7 text-white">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10">
+          <h1 className="text-2xl font-bold mb-1">Applications Dashboard</h1>
+          <p className="text-slate-300 text-sm">Manage and review student registration applications</p>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {STAT_CARDS.map(({ key, label, icon, color, iconColor }) => (
+          <div key={key} className={`bg-gradient-to-br ${color} rounded-xl p-4 text-white shadow-sm`}>
+            <div className="flex items-center justify-between mb-3">
+              <svg className={`w-5 h-5 ${iconColor}`} fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                <path d={icon}/>
+              </svg>
+            </div>
+            <p className="text-2xl font-bold">{stats[key]}</p>
             <p className="text-xs opacity-80 mt-0.5">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        {/* Search */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="relative flex-1 max-w-xs">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
           <input
             type="text"
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full pl-9 pr-4 h-10 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             placeholder="Search by name or email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        {/* Status filters */}
         <div className="flex flex-wrap gap-1.5">
-          {STATUSES.map((s) => {
-            const cfg = STATUS_CONFIG[s];
-            return (
-              <button
-                key={s || 'all'}
-                onClick={() => setFilterStatus(s)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-                  filterStatus === s
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                {FILTER_LABELS[s]}
-              </button>
-            );
-          })}
+          {STATUSES.map((s) => (
+            <button
+              key={s || 'all'}
+              onClick={() => setFilterStatus(s)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                filterStatus === s
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              {FILTER_LABELS[s]}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Table card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"/>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">
-            <div className="text-4xl mb-3">📭</div>
-            <p className="text-gray-500">No applications found</p>
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+            </div>
+            <p className="text-slate-500 font-medium">No applications found</p>
+            <p className="text-slate-400 text-sm mt-1">Try adjusting your filters</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/60">
+                <tr className="border-b border-slate-100 bg-slate-50">
                   {['Student', 'Programme', 'Status', 'Docs', 'Submitted', ''].map((h) => (
-                    <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-slate-50">
                 {filtered.map((app) => {
                   const cfg = STATUS_CONFIG[app.status] || STATUS_CONFIG.DRAFT;
                   return (
-                    <tr key={app.id} className="hover:bg-gray-50/60 transition group">
+                    <tr key={app.id} className="hover:bg-slate-50 transition group">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0">
+                          <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0">
                             {(app.studentName || ' ')[0].toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">{app.studentName}</p>
-                            <p className="text-xs text-gray-400">{app.studentEmail}</p>
+                            <p className="font-semibold text-slate-900">{app.studentName}</p>
+                            <p className="text-xs text-slate-400">{app.studentEmail}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-lg">
+                        <span className="text-xs text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg font-medium">
                           {app.registrationType?.replace(/_/g, ' ')}
                         </span>
                       </td>
@@ -166,16 +180,16 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 max-w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="flex-1 max-w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-500 rounded-full"
                               style={{ width: `${app.documentsTotal ? (app.documentsValid / app.documentsTotal) * 100 : 0}%` }}
                             />
                           </div>
-                          <span className="text-xs text-gray-500">{app.documentsValid}/{app.documentsTotal}</span>
+                          <span className="text-xs text-slate-500 font-medium">{app.documentsValid}/{app.documentsTotal}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-xs text-gray-400">
+                      <td className="px-5 py-4 text-xs text-slate-400">
                         {app.submittedAt
                           ? new Date(app.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                           : '—'}
@@ -183,7 +197,7 @@ const AdminDashboard = () => {
                       <td className="px-5 py-4">
                         <button
                           onClick={() => setSelectedId(app.id)}
-                          className="opacity-0 group-hover:opacity-100 flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-semibold transition"
+                          className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-xs font-semibold transition bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg"
                         >
                           Review
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">

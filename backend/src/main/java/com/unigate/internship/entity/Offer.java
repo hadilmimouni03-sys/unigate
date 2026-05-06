@@ -23,6 +23,8 @@ public class Offer {
     @Column(columnDefinition = "TEXT") private String description;
     private String requiredDepartment;
     private String requiredSpeciality;
+    private String internshipType;
+    private String targetYear;
     private int durationMonths;
 
     @Enumerated(EnumType.STRING) @Column(nullable = false)

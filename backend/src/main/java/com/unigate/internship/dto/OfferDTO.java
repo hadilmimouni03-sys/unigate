@@ -18,8 +18,11 @@ public class OfferDTO {
     private String description;
     private String requiredDepartment;
     private String requiredSpeciality;
+    private String internshipType;
+    private String targetYear;
     private int durationMonths;
     private OfferStatus status;
     private LocalDate applicationDeadline;
     private LocalDateTime publishedAt;
+    private String location;
 }
