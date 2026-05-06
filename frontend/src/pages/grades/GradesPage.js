@@ -1,344 +1,348 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { gradeApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const PASS = 10;
 
-const uid = () =>
-  typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
-
-const newCourse = () => ({
-  id: uid(),
-  name: '',
-  coef: 3,
-  dsGrade: '',
-  dsWeight: 40,
-  examGrade: '',
-  examWeight: 60,
-  hasTP: false,
-  tpGrade: '',
-  tpWeight: 0,
-});
-
-const computeFinal = (c) => {
-  const ds = parseFloat(c.dsGrade);
-  const exam = parseFloat(c.examGrade);
-  if (isNaN(ds) || isNaN(exam)) return null;
-  if (c.hasTP && isNaN(parseFloat(c.tpGrade))) return null;
-  const tp = c.hasTP ? parseFloat(c.tpGrade) : 0;
-  const tpW = c.hasTP ? c.tpWeight / 100 : 0;
-  const val = (c.dsWeight / 100) * ds + (c.examWeight / 100) * exam + tpW * tp;
-  return Math.round(val * 100) / 100;
-};
-
-const weightSum = (c) =>
-  c.dsWeight + c.examWeight + (c.hasTP ? c.tpWeight : 0);
-
 const markColor = (m) =>
-  m == null ? 'text-gray-400' : m >= 14 ? 'text-green-600' : m >= PASS ? 'text-blue-600' : 'text-red-500';
+  m == null ? 'text-slate-400'
+  : m >= 14 ? 'text-green-600'
+  : m >= PASS ? 'text-blue-600'
+  : 'text-red-500';
 
-// ── Sub-components ──────────────────────────────────────────────────────────
-
-const GradeInput = ({ label, grade, weight, onGrade, onWeight }) => (
-  <div className="flex items-center gap-2">
-    <span className="text-xs font-semibold text-gray-500 w-9 shrink-0">{label}</span>
-    <div className="flex items-center gap-1">
-      <input
-        type="number" min="0" max="20" step="0.25"
-        value={grade}
-        onChange={(e) => onGrade(e.target.value)}
-        placeholder="—"
-        className="w-16 text-center text-sm border border-gray-200 rounded-lg py-1.5 outline-none focus:ring-2 focus:ring-blue-300 bg-gray-50"
-      />
-      <span className="text-xs text-gray-400">/20</span>
-    </div>
-    <div className="flex items-center gap-1 ml-2">
-      <input
-        type="number" min="0" max="100" step="5"
-        value={weight}
-        onChange={(e) => onWeight(e.target.value)}
-        className="w-14 text-center text-sm border border-gray-200 rounded-lg py-1.5 outline-none focus:ring-2 focus:ring-blue-300 bg-gray-50"
-      />
-      <span className="text-xs text-gray-400">%</span>
-    </div>
+const Spinner = () => (
+  <div className="flex justify-center py-20">
+    <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"/>
   </div>
 );
 
-const Toggle = ({ on, onToggle }) => (
-  <button
-    type="button"
-    onClick={onToggle}
-    className={`relative w-8 h-4 rounded-full transition shrink-0 ${on ? 'bg-blue-500' : 'bg-gray-200'}`}
-  >
-    <span
-      className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${on ? 'translate-x-4' : ''}`}
-    />
-  </button>
-);
+const StatusBadge = ({ passed, final: finalMark }) => {
+  if (finalMark == null) return null;
+  if (passed) {
+    return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Pass</span>;
+  }
+  return <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">Fail</span>;
+};
 
-const CourseCard = ({ course, index, onUpdate, onRemove, canRemove }) => {
-  const final = computeFinal(course);
-  const wsum = weightSum(course);
-  const weightsOk = Math.abs(wsum - 100) < 0.01;
-  const passed = final !== null && final >= PASS;
+const ModuleCard = ({ grade, onSave, saving }) => {
+  const isOfficial = grade.adminEntered;
+  const hasTp = grade.tpWeight > 0;
 
-  const borderCls = final === null
-    ? 'border-gray-100'
-    : passed ? 'border-green-200' : 'border-red-200';
+  const [cc, setCc]     = useState(grade.ccMark   != null ? String(grade.ccMark)   : '');
+  const [exam, setExam] = useState(grade.examMark != null ? String(grade.examMark) : '');
+  const [tp, setTp]     = useState(grade.tpMark   != null ? String(grade.tpMark)   : '');
+
+  // live preview (client-side)
+  const ccVal   = parseFloat(cc)   || 0;
+  const examVal = parseFloat(exam) || 0;
+  const tpVal   = parseFloat(tp)   || 0;
+  const hasAllRequired = cc !== '' && exam !== '' && (!hasTp || tp !== '');
+  const preview = hasAllRequired
+    ? Math.round((grade.ccWeight / 100 * ccVal + grade.examWeight / 100 * examVal + grade.tpWeight / 100 * tpVal) * 100) / 100
+    : grade.finalMark;
+  const previewPassed = preview != null && preview >= PASS;
+
+  const reqExam = hasAllRequired && !previewPassed && grade.examWeight > 0
+    ? Math.min(20, Math.max(0, (PASS - grade.ccWeight / 100 * ccVal) / (grade.examWeight / 100)))
+    : null;
+
+  const borderCls = preview == null
+    ? 'border-slate-200'
+    : previewPassed ? 'border-green-200' : 'border-red-200';
+
+  const handleSubmit = () => {
+    onSave({ moduleCode: grade.moduleCode, ccMark: parseFloat(cc), examMark: parseFloat(exam), tpMark: hasTp ? parseFloat(tp) : undefined });
+  };
 
   return (
-    <div className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${borderCls}`}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-50">
-        <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-xs font-bold text-blue-600 shrink-0">
-          {index + 1}
+    <div className={`bg-white rounded-2xl border-2 shadow-sm overflow-hidden transition-all ${borderCls}`}>
+      {/* Card header */}
+      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-50 bg-slate-50/50">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-bold text-slate-900 text-sm truncate">{grade.moduleName}</h3>
+            {isOfficial && (
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 shrink-0">
+                Official
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            {grade.department && (
+              <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{grade.department}</span>
+            )}
+            <span className="text-xs text-slate-400">{grade.credits} credits · S{grade.semester}</span>
+          </div>
         </div>
-        <input
-          type="text"
-          value={course.name}
-          onChange={(e) => onUpdate('name', e.target.value)}
-          placeholder="Course name…"
-          className="flex-1 text-sm font-medium text-gray-800 border-0 outline-none bg-transparent placeholder-gray-300"
-        />
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-xs text-gray-400">Coef.</span>
-          <input
-            type="number" min="1" max="20" step="1"
-            value={course.coef}
-            onChange={(e) => onUpdate('coef', Math.max(1, parseInt(e.target.value) || 1))}
-            className="w-12 text-center text-sm font-semibold border border-gray-200 rounded-lg py-1 outline-none focus:ring-2 focus:ring-blue-300 bg-gray-50"
-          />
-        </div>
-        {canRemove && (
-          <button
-            onClick={onRemove}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        )}
+        <StatusBadge passed={previewPassed} final={preview} />
       </div>
 
       {/* Grade inputs */}
       <div className="px-5 py-4 space-y-3">
-        <GradeInput
-          label="DS"
-          grade={course.dsGrade}
-          weight={course.dsWeight}
-          onGrade={(v) => onUpdate('dsGrade', v)}
-          onWeight={(v) => onUpdate('dsWeight', parseFloat(v) || 0)}
-        />
-        <GradeInput
-          label="Exam"
-          grade={course.examGrade}
-          weight={course.examWeight}
-          onGrade={(v) => onUpdate('examGrade', v)}
-          onWeight={(v) => onUpdate('examWeight', parseFloat(v) || 0)}
-        />
-
-        {/* TP toggle */}
+        {/* CC */}
         <div className="flex items-center gap-3">
-          <Toggle on={course.hasTP} onToggle={() => onUpdate('hasTP', !course.hasTP)} />
-          <span className="text-xs text-gray-500 select-none">Has TP</span>
-          {course.hasTP && (
-            <div className="flex-1">
-              <GradeInput
-                label="TP"
-                grade={course.tpGrade}
-                weight={course.tpWeight}
-                onGrade={(v) => onUpdate('tpGrade', v)}
-                onWeight={(v) => onUpdate('tpWeight', parseFloat(v) || 0)}
-              />
-            </div>
-          )}
+          <span className="text-xs font-semibold text-slate-500 w-10 shrink-0">CC</span>
+          <input
+            type="number" min="0" max="20" step="0.25"
+            disabled={isOfficial}
+            value={cc}
+            onChange={(e) => setCc(e.target.value)}
+            placeholder="—"
+            className="w-20 text-center text-sm border border-slate-200 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+          <span className="text-xs text-slate-400">/20</span>
+          <span className="ml-auto text-xs text-slate-400 shrink-0">{grade.ccWeight}%</span>
         </div>
 
-        {/* Weights warning */}
-        {!weightsOk && (
+        {/* Exam */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold text-slate-500 w-10 shrink-0">Exam</span>
+          <input
+            type="number" min="0" max="20" step="0.25"
+            disabled={isOfficial}
+            value={exam}
+            onChange={(e) => setExam(e.target.value)}
+            placeholder="—"
+            className="w-20 text-center text-sm border border-slate-200 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+          <span className="text-xs text-slate-400">/20</span>
+          <span className="ml-auto text-xs text-slate-400 shrink-0">{grade.examWeight}%</span>
+        </div>
+
+        {/* TP (only if configured) */}
+        {hasTp && (
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-500 w-10 shrink-0">TP</span>
+            <input
+              type="number" min="0" max="20" step="0.25"
+              disabled={isOfficial}
+              value={tp}
+              onChange={(e) => setTp(e.target.value)}
+              placeholder="—"
+              className="w-20 text-center text-sm border border-slate-200 rounded-lg py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            <span className="text-xs text-slate-400">/20</span>
+            <span className="ml-auto text-xs text-slate-400 shrink-0">{grade.tpWeight}%</span>
+          </div>
+        )}
+
+        {/* Min exam needed */}
+        {reqExam != null && !isOfficial && (
           <p className="text-xs text-amber-600 flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            Weights sum to {wsum}% — must equal 100%
+            Min exam to pass: <strong>{reqExam.toFixed(2)}/20</strong>
+          </p>
+        )}
+        {grade.requiredExamToPass === 'IMPOSSIBLE' && !isOfficial && (
+          <p className="text-xs text-red-600 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Cannot pass with current CC mark
           </p>
         )}
       </div>
 
-      {/* Result footer */}
-      {final !== null && weightsOk && (
-        <div className={`px-5 py-2.5 flex items-center justify-between border-t ${passed ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-          <span className="text-sm font-bold text-gray-700">
-            Final:{' '}
-            <span className={markColor(final)}>{final.toFixed(2)}/20</span>
+      {/* Result bar */}
+      {preview != null && (
+        <div className={`px-5 py-2.5 flex items-center justify-between border-t ${
+          previewPassed ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'
+        }`}>
+          <span className="text-sm font-bold text-slate-700">
+            Final: <span className={markColor(preview)}>{preview.toFixed(2)}/20</span>
           </span>
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-            {passed ? '✓ Pass' : '✗ Fail'}
-          </span>
+          {!isOfficial && hasAllRequired && (
+            <button
+              onClick={handleSubmit}
+              disabled={saving}
+              className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white px-3 py-1 rounded-lg transition"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          )}
+        </div>
+      )}
+      {preview == null && !isOfficial && (
+        <div className="px-5 py-2.5 border-t border-slate-100">
+          <button
+            onClick={handleSubmit}
+            disabled={!hasAllRequired || saving}
+            className="w-full text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white py-1.5 rounded-lg transition"
+          >
+            {saving ? 'Saving…' : 'Save Grades'}
+          </button>
         </div>
       )}
     </div>
   );
 };
 
-// ── Main page ────────────────────────────────────────────────────────────────
-
-const STORAGE_KEY = 'unigate_grade_sim';
-
 const STATUS_CFG = {
-  PASS:       { bg: 'bg-green-50 border-green-200', text: 'text-green-700', icon: '🎉', label: 'You pass the year' },
-  RATTRAPAGE: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', icon: '⚠️', label: 'Rattrapage — retake failed exams' },
-  FAIL:       { bg: 'bg-red-50 border-red-200',     text: 'text-red-700',   icon: '✗',  label: 'You fail the year' },
+  PASS:       { bg: 'bg-green-50 border-green-200',  text: 'text-green-700',  label: 'You pass the year',               icon: '✓' },
+  RATTRAPAGE: { bg: 'bg-amber-50 border-amber-200',  text: 'text-amber-700',  label: 'Rattrapage — retake failed exams', icon: '⚠' },
+  FAIL:       { bg: 'bg-red-50 border-red-200',      text: 'text-red-700',    label: 'You fail the year',               icon: '✗' },
 };
 
 const GradesPage = () => {
-  const [courses, setCourses] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [newCourse()];
-    } catch {
-      return [newCourse()];
-    }
-  });
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
-  }, [courses]);
+  const [grades, setGrades]     = useState([]);
+  const [semester, setSemester] = useState('all');
+  const [loading, setLoading]   = useState(true);
+  const [savingId, setSavingId] = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
-  const add = () => setCourses((p) => [...p, newCourse()]);
-  const remove = (id) => setCourses((p) => p.filter((c) => c.id !== id));
-  const update = (id, key, val) =>
-    setCourses((p) => p.map((c) => (c.id === id ? { ...c, [key]: val } : c)));
-  const clearAll = () => {
-    if (window.confirm('Clear all courses and start over?')) setCourses([newCourse()]);
+  const load = useCallback(() => {
+    setLoading(true);
+    gradeApi.myGrades()
+      .then(({ data }) => setGrades(data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const notify = (msg, type = 'success') => {
+    setFeedback({ msg, type });
+    setTimeout(() => setFeedback(null), 3000);
   };
 
-  // ── Simulation ──────────────────────────────────────────────────────────────
+  const handleSave = async (moduleCode, payload) => {
+    setSavingId(moduleCode);
+    try {
+      const { data } = await gradeApi.enterMyGrade(payload);
+      setGrades((prev) => prev.map((g) => g.moduleCode === moduleCode ? data : g));
+      notify('Grades saved!');
+    } catch (err) {
+      notify(err.response?.data?.message || 'Failed to save grades.', 'error');
+    } finally {
+      setSavingId(null);
+    }
+  };
 
-  const results = courses.map((c) => ({ ...c, final: computeFinal(c) }));
-  const filled = results.filter((r) => r.final !== null && Math.abs(weightSum(r) - 100) < 0.01);
+  const filtered = semester === 'all'
+    ? grades
+    : grades.filter((g) => g.semester === parseInt(semester));
 
-  const totalCoef   = courses.reduce((s, c) => s + Number(c.coef), 0);
-  const filledCoef  = filled.reduce((s, c) => s + Number(c.coef), 0);
-  const earnedCoef  = filled.filter((c) => c.final >= PASS).reduce((s, c) => s + Number(c.coef), 0);
-  const failedCoef  = filled.filter((c) => c.final < PASS).reduce((s, c) => s + Number(c.coef), 0);
-
-  const gpa = filledCoef > 0
-    ? Math.round((filled.reduce((s, c) => s + c.final * Number(c.coef), 0) / filledCoef) * 100) / 100
+  // Summary calculations
+  const withFinal   = filtered.filter((g) => g.finalMark != null);
+  const passing     = withFinal.filter((g) => g.passed);
+  const failing     = withFinal.filter((g) => !g.passed);
+  const totalCredits  = filtered.reduce((s, g) => s + g.credits, 0);
+  const earnedCredits = passing.reduce((s, g) => s + g.credits, 0);
+  const lostCredits   = failing.reduce((s, g) => s + g.credits, 0);
+  const gpa = withFinal.length > 0
+    ? Math.round(withFinal.reduce((s, g) => s + g.finalMark * g.credits, 0)
+        / withFinal.reduce((s, g) => s + g.credits, 0) * 100) / 100
     : null;
-
-  const status =
-    gpa === null      ? null
-    : gpa < PASS      ? 'FAIL'
-    : failedCoef > 0  ? 'RATTRAPAGE'
-    : 'PASS';
-
+  const status = gpa == null ? null : gpa < PASS ? 'FAIL' : lostCredits > 0 ? 'RATTRAPAGE' : 'PASS';
   const scfg = status ? STATUS_CFG[status] : null;
 
-  return (
-    <div className="px-6 py-6 max-w-4xl mx-auto">
+  // Semester options derived from loaded grades
+  const semesters = [...new Set(grades.map((g) => g.semester))].sort();
 
-      {/* Page header */}
-      <div className="flex items-start justify-between mb-6">
+  return (
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Grade Simulator</h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            Enter your expected grades and component weights to simulate your results
+          <h1 className="text-3xl font-bold text-slate-900">My Grades</h1>
+          <p className="text-slate-500 text-sm mt-0.5">
+            {isAdmin ? 'Grade overview' : 'Enter your CC, Exam, and TP marks — the system calculates your final result'}
           </p>
         </div>
-        <button
-          onClick={clearAll}
-          className="text-xs text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition"
-        >
-          Clear all
-        </button>
+
+        {/* Semester pills */}
+        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+          <button
+            onClick={() => setSemester('all')}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${semester === 'all' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+          >All</button>
+          {semesters.map((s) => (
+            <button
+              key={s}
+              onClick={() => setSemester(String(s))}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${semester === String(s) ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            >S{s}</button>
+          ))}
+        </div>
       </div>
 
-      {/* Summary banner */}
-      {gpa !== null && (
-        <div className={`rounded-2xl border p-5 mb-6 ${scfg.bg}`}>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <p className="text-xs text-gray-500 mb-1">GPA</p>
-              <p className={`text-2xl font-bold ${markColor(gpa)}`}>
-                {gpa.toFixed(2)}
-                <span className="text-sm font-normal text-gray-400">/20</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Credits earned</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {earnedCoef}
-                <span className="text-sm font-normal text-gray-400">/{totalCoef}</span>
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Credits lost</p>
-              <p className={`text-2xl font-bold ${failedCoef > 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                {failedCoef}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Year result</p>
-              <p className={`text-sm font-bold flex items-center gap-1.5 mt-1 ${scfg.text}`}>
-                <span>{scfg.icon}</span>
-                {scfg.label}
-              </p>
-            </div>
-          </div>
-
-          {status === 'RATTRAPAGE' && (
-            <p className="text-xs text-amber-700 mt-3 border-t border-amber-200 pt-3">
-              Your GPA is ≥ 10, but you failed {filled.filter((c) => c.final < PASS).length} course(s)
-              ({failedCoef} credits). You must retake the exams for those courses.
-            </p>
-          )}
-          {status === 'FAIL' && (
-            <p className="text-xs text-red-600 mt-3 border-t border-red-200 pt-3">
-              Your GPA is below 10 — you must repeat the year.
-            </p>
-          )}
-          {status === 'PASS' && (
-            <p className="text-xs text-green-700 mt-3 border-t border-green-200 pt-3">
-              GPA ≥ 10 and all {totalCoef} credits earned — you pass the year!
-            </p>
-          )}
+      {/* Toast */}
+      {feedback && (
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
+          feedback.type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'
+        }`}>
+          {feedback.msg}
         </div>
       )}
 
-      {/* Course cards */}
-      <div className="space-y-4 mb-5">
-        {results.map((c, i) => (
-          <CourseCard
-            key={c.id}
-            course={c}
-            index={i}
-            onUpdate={(key, val) => update(c.id, key, val)}
-            onRemove={() => remove(c.id)}
-            canRemove={courses.length > 1}
-          />
-        ))}
-      </div>
+      {/* Summary bar */}
+      {gpa != null && scfg && (
+        <div className={`rounded-2xl border-2 p-5 ${scfg.bg}`}>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs text-slate-500 mb-1">GPA</p>
+              <p className={`text-2xl font-bold ${markColor(gpa)}`}>
+                {gpa.toFixed(2)}<span className="text-sm font-normal text-slate-400">/20</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Credits Earned</p>
+              <p className="text-2xl font-bold text-slate-800">
+                {earnedCredits}<span className="text-sm font-normal text-slate-400">/{totalCredits}</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Credits Lost</p>
+              <p className={`text-2xl font-bold ${lostCredits > 0 ? 'text-red-500' : 'text-slate-400'}`}>{lostCredits}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">Year Result</p>
+              <p className={`text-sm font-bold flex items-center gap-1.5 mt-1 ${scfg.text}`}>
+                <span>{scfg.icon}</span>{scfg.label}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* Add course button */}
-      <button
-        onClick={add}
-        className="w-full py-3.5 border-2 border-dashed border-gray-200 rounded-2xl text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 transition flex items-center justify-center gap-2"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-        Add Course
-      </button>
+      {/* Module cards */}
+      {loading ? <Spinner /> : filtered.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
+          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <p className="text-slate-600 font-medium">No modules configured yet</p>
+          <p className="text-slate-400 text-sm mt-1">Your admin hasn't set up grade configurations for your department</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map((g) => (
+            <ModuleCard
+              key={g.moduleCode}
+              grade={g}
+              saving={savingId === g.moduleCode}
+              onSave={(payload) => handleSave(g.moduleCode, payload)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Legend */}
-      <div className="mt-6 bg-gray-50 rounded-xl px-4 py-3 text-xs text-gray-400 space-y-1">
-        <p><strong className="text-gray-500">DS</strong> — Continuous assessment (devoir surveillé)</p>
-        <p><strong className="text-gray-500">TP</strong> — Practical work (travaux pratiques) — toggle per course if applicable</p>
-        <p><strong className="text-gray-500">GPA ≥ 10 + all credits</strong> → Pass · <strong className="text-gray-500">GPA ≥ 10 + missing credits</strong> → Rattrapage · <strong className="text-gray-500">GPA &lt; 10</strong> → Fail</p>
-        <p>Your simulation is saved automatically in your browser.</p>
-      </div>
+      {!isAdmin && filtered.length > 0 && (
+        <div className="bg-slate-50 rounded-xl border border-slate-200 px-4 py-3 text-xs text-slate-400 space-y-1">
+          <p><strong className="text-slate-500">Official</strong> — Grade entered by your admin. Read-only.</p>
+          <p><strong className="text-slate-500">CC</strong> — Continuous assessment · <strong className="text-slate-500">TP</strong> — Practical work (shown when applicable)</p>
+          <p>Weights are set by your department admin and shown as % on each row.</p>
+        </div>
+      )}
     </div>
   );
 };
