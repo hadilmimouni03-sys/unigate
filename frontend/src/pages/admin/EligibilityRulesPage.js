@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { eligibilityApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const uid = () => Math.random().toString(36).slice(2);
 
@@ -52,6 +54,28 @@ const EligibilityRulesPage = () => {
   const [rules, setRules] = useState(DEFAULT_RULES);
   const [saved, setSaved] = useState(false);
 
+  const { user } = useAuth();
+  const dept = user?.department;
+
+  // Load rules from API when year or dept changes
+  useEffect(() => {
+    if (!dept) return;
+    eligibilityApi.getRules(dept, activeYear).then(({ data }) => {
+      if (data.length > 0) {
+        setRules((prev) => ({
+          ...prev,
+          [activeYear]: data.map((r) => ({
+            id: r.id ? String(r.id) : uid(),
+            rule: r.ruleName,
+            condition: r.conditionType,
+            value: r.targetValue,
+            enabled: r.enabled,
+          })),
+        }));
+      }
+    }).catch(() => {});
+  }, [dept, activeYear]);
+
   const currentRules = rules[activeYear] || [];
 
   const updateRule = (id, field, value) => {
@@ -74,9 +98,21 @@ const EligibilityRulesPage = () => {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    if (!dept) return;
+    const payload = currentRules.map((r) => ({
+      ruleName: r.rule,
+      conditionType: r.condition,
+      targetValue: r.value,
+      enabled: r.enabled,
+    }));
+    try {
+      await eligibilityApi.saveRules(activeYear, payload);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      // keep existing saved-false state
+    }
   };
 
   const enabledCount = currentRules.filter((r) => r.enabled).length;
