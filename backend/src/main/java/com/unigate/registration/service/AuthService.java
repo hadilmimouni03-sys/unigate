@@ -70,6 +70,9 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException("Refresh token not found"));
         refreshTokenService.verifyExpiration(refreshToken);
         User user = refreshToken.getUser();
+        // Reload to avoid Hibernate proxy — instanceof Student fails on proxies
+        user = userRepository.findById(user.getId())
+                .orElseThrow(() -> new BusinessException("User not found"));
         String newAccessToken = jwtTokenProvider.generateToken(user);
         return buildResponse(user, newAccessToken, refreshToken.getToken());
     }
