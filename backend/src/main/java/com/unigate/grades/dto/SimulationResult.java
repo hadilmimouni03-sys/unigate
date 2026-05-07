@@ -39,7 +39,6 @@ public class SimulationResult {
         private String subjectName;
         private int semester;
         private Double subjectAvg;
-        private double coefficient;
         private int credits;
         private Double ccMark;
         private Double examMark;

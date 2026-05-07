@@ -14,7 +14,6 @@ public class Student extends User {
     @Enumerated(EnumType.STRING)
     private RegistrationType registrationType;
 
-    private String department;
     private String speciality;
     private String partnerUniversity;
     private String partnerCountry;

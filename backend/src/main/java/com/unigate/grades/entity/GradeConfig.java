@@ -22,9 +22,6 @@ public class GradeConfig {
     private int credits;
     private int semester;
 
-    /** Weight of this subject inside its parent module (default 1.0 = single-subject module). */
-    @Builder.Default private double coefficient = 1.0;
-
     /** Name of the module this subject belongs to. Null ⟹ subject IS its own module. */
     private String parentModuleName;
 }

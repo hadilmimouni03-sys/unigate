@@ -14,7 +14,12 @@
       "Bash(mvn clean *)",
       "Bash(java --version)",
       "Bash(docker-compose build *)",
-      "Bash(docker-compose up *)"
+      "Bash(docker-compose up *)",
+      "Bash(docker-compose logs *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(docker-compose exec *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"admin.cs@unigate.com\",\"password\":\"Admin@1234\"}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('OK - role:', d['role'], '| dept:', d['department']\\)\")"
     ]
   }
 }

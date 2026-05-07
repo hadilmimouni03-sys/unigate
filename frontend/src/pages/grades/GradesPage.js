@@ -25,8 +25,8 @@ const calcReqExam = (cfg, cc, tp) => {
 
 const calcModuleAvg = (subs) => {
   if (subs.some(s => s.avg === null)) return null;
-  const tc = subs.reduce((a, s) => a + s.coeff, 0);
-  return tc ? r2(subs.reduce((a, s) => a + s.avg * s.coeff, 0) / tc) : null;
+  const total = subs.reduce((a, s) => a + s.w, 0);
+  return total ? r2(subs.reduce((a, s) => a + s.avg * s.w, 0) / total) : null;
 };
 
 // ── Build semester → module → subject hierarchy ───────────────────────────
@@ -54,11 +54,11 @@ function buildHierarchy(configs, gradesMap, localMarks) {
             cfg, grade, cc, exam, tp,
             avg:     calcAvg(cfg, cc, exam, tp),
             reqExam: calcReqExam(cfg, cc, tp),
-            coeff:   cfg.coefficient,
+            w:       cfg.credits,
           };
         });
 
-        const modAvg = calcModuleAvg(subjects.map(s => ({ avg: s.avg, coeff: s.coeff })));
+        const modAvg = calcModuleAvg(subjects.map(s => ({ avg: s.avg, w: s.w })));
         const credits = cfgs.reduce((a, c) => a + c.credits, 0);
         return { modName, subjects, avg: modAvg, credits, passed: modAvg !== null && modAvg >= PASS };
       });
@@ -237,7 +237,7 @@ const SubjectCard = ({ sub, onMarkChange, onSave, saving }) => {
                 </span>
               )}
             </div>
-            <span className="text-xs text-slate-400 font-mono">{cfg.moduleCode} · Coeff ×{cfg.coefficient}</span>
+            <span className="text-xs text-slate-400 font-mono">{cfg.moduleCode} · {cfg.credits} crédit{cfg.credits > 1 ? 's' : ''}</span>
           </div>
           <div className="shrink-0">
             <AvgBadge avg={avg} />

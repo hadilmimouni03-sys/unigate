@@ -17,6 +17,5 @@ public class GradeConfigDTO {
     private double tpWeight;
     private int credits;
     private int semester;
-    @Builder.Default private double coefficient = 1.0;
     private String parentModuleName;
 }

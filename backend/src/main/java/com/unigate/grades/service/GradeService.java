@@ -114,7 +114,6 @@ public class GradeService {
             config.setTpWeight(dto.getTpWeight() / 100.0);
             config.setCredits(dto.getCredits());
             config.setSemester(dto.getSemester());
-            config.setCoefficient(dto.getCoefficient() > 0 ? dto.getCoefficient() : 1.0);
             config.setParentModuleName(dto.getParentModuleName());
             return toConfigDTO(configRepository.save(config));
         }).collect(Collectors.toList());
@@ -167,7 +166,6 @@ public class GradeService {
                     .subjectName(c.getModuleName())
                     .semester(c.getSemester())
                     .subjectAvg(avg)
-                    .coefficient(c.getCoefficient())
                     .credits(c.getCredits())
                     .ccMark(cc).examMark(exam).tpMark(tp)
                     .ccWeight(c.getCcWeight() * 100)
@@ -208,10 +206,9 @@ public class GradeService {
 
                 Double moduleAvg = null;
                 if (modSubjects.stream().allMatch(s -> s.getSubjectAvg() != null)) {
-                    double coeffSum  = modSubjects.stream().mapToDouble(SimulationResult.SubjectResult::getCoefficient).sum();
                     double weightedSum = modSubjects.stream()
-                            .mapToDouble(s -> s.getSubjectAvg() * s.getCoefficient()).sum();
-                    moduleAvg = coeffSum > 0 ? round2(weightedSum / coeffSum) : null;
+                            .mapToDouble(s -> s.getSubjectAvg() * s.getCredits()).sum();
+                    moduleAvg = modCredits > 0 ? round2(weightedSum / modCredits) : null;
                 }
 
                 boolean modPassed = moduleAvg != null && moduleAvg >= PASSING_MARK;
@@ -305,7 +302,6 @@ public class GradeService {
                 .ccWeight(c.getCcWeight() * 100)
                 .examWeight(c.getExamWeight() * 100)
                 .tpWeight(c.getTpWeight() * 100)
-                .coefficient(c.getCoefficient())
                 .parentModuleName(c.getParentModuleName())
                 .ccMark(g.getCcMark())
                 .examMark(g.getExamMark())
@@ -328,7 +324,6 @@ public class GradeService {
                 .tpWeight(c.getTpWeight() * 100)
                 .credits(c.getCredits())
                 .semester(c.getSemester())
-                .coefficient(c.getCoefficient())
                 .parentModuleName(c.getParentModuleName())
                 .build();
     }
