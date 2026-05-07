@@ -1,13 +1,14 @@
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
-const WS_URL = process.env.REACT_APP_WS_URL || 'http://localhost:8080/ws';
+const WS_URL = process.env.REACT_APP_WS_URL ||
+  `${window.location.protocol}//${window.location.host}/ws`;
 
 let stompClient = null;
 
 export const connectWebSocket = (userEmail, callbacks = {}) => {
   stompClient = new Client({
-    webSocketFactory: () => new SockJS(WS_URL),
+    webSocketFactory: () => new SockJS(WS_URL, null, { transports: ['websocket', 'xhr-streaming', 'xhr-polling'] }),
     connectHeaders: {
       Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
     },
@@ -48,7 +49,7 @@ export const disconnectWebSocket = () => {
  */
 export const createSimulationClient = (userEmail, onResult) => {
   const client = new Client({
-    webSocketFactory: () => new SockJS(WS_URL),
+    webSocketFactory: () => new SockJS(WS_URL, null, { transports: ['websocket', 'xhr-streaming', 'xhr-polling'] }),
     connectHeaders: {
       Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
     },
