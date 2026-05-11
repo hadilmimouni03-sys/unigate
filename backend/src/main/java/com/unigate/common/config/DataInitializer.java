@@ -34,6 +34,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Configuration
@@ -198,7 +200,141 @@ public class DataInitializer {
                     .decidedAt(LocalDateTime.now().minusDays(3))
                     .build());
 
-            log.info("GI students seeded — karim.hamdi@student.unigate.com / Student@1234");
+            // GI Student 3: 1st year — SUBMITTED (for admin review testing)
+            Student gi3 = buildStudent("Amine", "Belkadi", "amine.belkadi@student.unigate.com", pwd,
+                    RegistrationType.FIRST_YEAR_ING, "Génie Industriel", "Production Industrielle", null, null, null);
+            userRepository.save(gi3);
+            applicationRepository.save(Application.builder()
+                    .student(gi3).registrationType(RegistrationType.FIRST_YEAR_ING)
+                    .status(ApplicationStatus.SUBMITTED)
+                    .submittedAt(LocalDateTime.now().minusDays(1))
+                    .build());
+
+            log.info("GI students seeded — karim.hamdi@student.unigate.com / amine.belkadi@student.unigate.com — pwd: Student@1234");
+        };
+    }
+
+    @Bean
+    @Order(7)
+    CommandLineRunner seedGIClassGroups() {
+        return args -> {
+            if (!classGroupRepository.findByDepartmentAndYear("Génie Industriel", 3).isEmpty()) return;
+
+            // GI courses
+            Course prod  = saveCourse("GI101", "Production Management",    "Génie Industriel", 5);
+            Course qual  = saveCourse("GI102", "Quality Control",           "Génie Industriel", 4);
+            Course maint = saveCourse("GI103", "Industrial Maintenance",    "Génie Industriel", 4);
+            Course logi  = saveCourse("GI201", "Logistics & Supply Chain",  "Génie Industriel", 5);
+            Course lean  = saveCourse("GI202", "Lean Manufacturing",        "Génie Industriel", 4);
+
+            // GI class groups
+            ClassGroup giG1 = classGroupRepository.save(ClassGroup.builder()
+                    .name("GI3-Production-A").department("Génie Industriel").year(3).semester("S5").yearLevel("3rd Year").build());
+            ClassGroup giM1 = classGroupRepository.save(ClassGroup.builder()
+                    .name("GIM1-Logistique").department("Génie Industriel").year(4).semester("S7").yearLevel("M1").build());
+
+            // Timetable for GI 3rd year group
+            saveSlot(prod,  giG1, DayOfWeek.MONDAY,    "08:00", "10:00", "D101", "Dr. Bensaad", "LECTURE");
+            saveSlot(qual,  giG1, DayOfWeek.MONDAY,    "10:00", "12:00", "D102", "Dr. Ferhat",  "LECTURE");
+            saveSlot(prod,  giG1, DayOfWeek.WEDNESDAY, "14:00", "16:00", "Lab6", "Dr. Bensaad", "TD");
+            saveSlot(maint, giG1, DayOfWeek.TUESDAY,   "08:00", "10:00", "D103", "Dr. Ayari",   "LECTURE");
+            saveSlot(maint, giG1, DayOfWeek.THURSDAY,  "10:00", "12:00", "Lab7", "Dr. Ayari",   "TP");
+
+            // Timetable for GI Master Logistique group
+            saveSlot(logi, giM1, DayOfWeek.MONDAY,    "10:00", "12:00", "D201", "Dr. Jlassi",  "LECTURE");
+            saveSlot(lean, giM1, DayOfWeek.TUESDAY,   "08:00", "10:00", "D202", "Dr. Miled",   "LECTURE");
+            saveSlot(logi, giM1, DayOfWeek.THURSDAY,  "14:00", "16:00", "Lab8", "Dr. Jlassi",  "TP");
+            saveSlot(lean, giM1, DayOfWeek.FRIDAY,    "10:00", "12:00", "D203", "Dr. Miled",   "TD");
+
+            log.info("GI class groups and timetable seeded — GI3-Production-A, GIM1-Logistique");
+        };
+    }
+
+    @Bean
+    @Order(8)
+    CommandLineRunner assignApprovedStudentsClassGroups() {
+        return args -> {
+            List.of(
+                "ahmed.ben.ali@student.unigate.com",
+                "karim.hamdi@student.unigate.com",
+                "nadia.slama@student.unigate.com"
+            ).forEach(email -> userRepository.findByEmail(email).ifPresent(u -> {
+                Student s = (Student) u;
+                if (s.getClassGroup() != null) return;
+                Integer year = mapRegistrationTypeToYear(s.getRegistrationType());
+                Optional<ClassGroup> group = (year != null)
+                        ? classGroupRepository.findFirstByDepartmentAndYearOrderByNameAsc(s.getDepartment(), year)
+                        : classGroupRepository.findFirstByDepartmentOrderByNameAsc(s.getDepartment());
+                group.ifPresent(g -> {
+                    s.setClassGroup(g);
+                    userRepository.save(s);
+                    log.info("Startup: assigned {} to class group {}", s.getEmail(), g.getName());
+                });
+            }));
+        };
+    }
+
+    private Integer mapRegistrationTypeToYear(RegistrationType type) {
+        if (type == null) return null;
+        return switch (type) {
+            case FIRST_YEAR_ING -> 1;
+            case SECOND_YEAR_ING -> 2;
+            case THIRD_YEAR_ING -> 3;
+            case MASTER_M1 -> 4;
+            case MASTER_M2 -> 5;
+            case EXCHANGE_PROGRAM, DOUBLE_DIPLOMA -> null;
+        };
+    }
+
+    private String mapYearToYearLevel(int year) {
+        return switch (year) {
+            case 1 -> "1st Year";
+            case 2 -> "2nd Year";
+            case 3 -> "3rd Year";
+            case 4 -> "M1";
+            case 5 -> "M2";
+            default -> "Year " + year;
+        };
+    }
+
+    @Bean
+    @Order(9)
+    CommandLineRunner backfillOfferFields() {
+        return args -> {
+            java.util.Map<String, String[]> knownOffers = java.util.Map.of(
+                "Full-Stack Developer Intern",   new String[]{"3rd Year", "Final Year"},
+                "Data Analyst Intern",           new String[]{"3rd Year", "Summer"},
+                "Network Infrastructure Intern", new String[]{"3rd Year", "Final Year"},
+                "Cybersecurity Intern",          new String[]{"M1",       "Summer"},
+                "Backend Java Developer Intern", new String[]{"3rd Year", "Final Year"},
+                "Machine Learning Intern",       new String[]{"M1",       "Worker"},
+                "Cloud DevOps Intern",           new String[]{"M2",       "Final Year"}
+            );
+            offerRepository.findAll().forEach(o -> {
+                if (o.getTargetYear() == null || o.getInternshipType() == null) {
+                    String[] vals = knownOffers.get(o.getTitle());
+                    if (vals != null) {
+                        o.setTargetYear(vals[0]);
+                        o.setInternshipType(vals[1]);
+                        offerRepository.save(o);
+                        log.info("Backfilled offer '{}': targetYear={}, internshipType={}", o.getTitle(), vals[0], vals[1]);
+                    }
+                }
+            });
+        };
+    }
+
+    @Bean
+    @Order(10)
+    CommandLineRunner backfillClassGroupYearLevels() {
+        return args -> {
+            classGroupRepository.findAll().forEach(g -> {
+                if (g.getYearLevel() == null) {
+                    g.setYearLevel(mapYearToYearLevel(g.getYear()));
+                    classGroupRepository.save(g);
+                    log.info("Backfilled yearLevel='{}' for group '{}'", g.getYearLevel(), g.getName());
+                }
+            });
         };
     }
 
@@ -224,11 +360,11 @@ public class DataInitializer {
 
             // Class Groups
             ClassGroup g1 = classGroupRepository.save(ClassGroup.builder()
-                    .name("ING3-CS-A").department("Computer Science").year(3).semester("S5").build());
+                    .name("ING3-CS-A").department("Computer Science").year(3).semester("S5").yearLevel("3rd Year").build());
             ClassGroup g2 = classGroupRepository.save(ClassGroup.builder()
-                    .name("ING3-CS-B").department("Computer Science").year(3).semester("S5").build());
+                    .name("ING3-CS-B").department("Computer Science").year(3).semester("S5").yearLevel("3rd Year").build());
             ClassGroup g3 = classGroupRepository.save(ClassGroup.builder()
-                    .name("MASTER-AI").department("Computer Science").year(4).semester("S7").build());
+                    .name("MASTER-AI").department("Computer Science").year(4).semester("S7").yearLevel("M1").build());
 
             // Timetable for Group 1 (ING3-CS-A)
             saveSlot(algo, g1, DayOfWeek.MONDAY, "08:00", "10:00", "A101", "Dr. Mansouri", "LECTURE");
@@ -355,31 +491,38 @@ public class DataInitializer {
             // Published offers
             publishOffer(biat, "Full-Stack Developer Intern",
                     "Join our Digital Transformation team to build modern web banking interfaces using React and Spring Boot.",
-                    "Computer Science", "Software Engineering", 6, LocalDate.now().plusMonths(1));
+                    "Computer Science", "Software Engineering", 6, LocalDate.now().plusMonths(1),
+                    "3rd Year", "Final Year");
 
             publishOffer(biat, "Data Analyst Intern",
                     "Work with our BI team on real-time financial reporting dashboards. Python and SQL required.",
-                    "Computer Science", "Data Science", 4, LocalDate.now().plusDays(20));
+                    "Computer Science", "Data Science", 4, LocalDate.now().plusDays(20),
+                    "3rd Year", "Summer");
 
             publishOffer(orange, "Network Infrastructure Intern",
                     "Assist in the deployment and monitoring of 5G network infrastructure across Tunis.",
-                    "Computer Science", "Networks", 6, LocalDate.now().plusMonths(2));
+                    "Computer Science", "Networks", 6, LocalDate.now().plusMonths(2),
+                    "3rd Year", "Final Year");
 
             publishOffer(orange, "Cybersecurity Intern",
                     "Support the security operations centre (SOC) with threat analysis and incident response.",
-                    "Computer Science", "Cybersecurity", 4, LocalDate.now().plusDays(45));
+                    "Computer Science", "Cybersecurity", 4, LocalDate.now().plusDays(45),
+                    "M1", "Summer");
 
             publishOffer(vermeg, "Backend Java Developer Intern",
                     "Contribute to our flagship financial platform built on Spring Boot microservices and Kafka.",
-                    "Computer Science", "Software Engineering", 6, LocalDate.now().plusMonths(2));
+                    "Computer Science", "Software Engineering", 6, LocalDate.now().plusMonths(2),
+                    "3rd Year", "Final Year");
 
             publishOffer(sopra, "Machine Learning Intern",
                     "Build NLP models to automate HR document processing and candidate screening.",
-                    "Computer Science", "Artificial Intelligence", 5, LocalDate.now().plusMonths(1));
+                    "Computer Science", "Artificial Intelligence", 5, LocalDate.now().plusMonths(1),
+                    "M1", "Worker");
 
             publishOffer(amdocs, "Cloud DevOps Intern",
                     "Maintain CI/CD pipelines and migrate legacy services to AWS and Kubernetes.",
-                    "Computer Science", "Cloud & DevOps", 6, LocalDate.now().plusDays(60));
+                    "Computer Science", "Cloud & DevOps", 6, LocalDate.now().plusDays(60),
+                    "M2", "Final Year");
 
             log.info("Companies and internship offers seeded");
         };
@@ -427,11 +570,14 @@ public class DataInitializer {
     }
 
     private void publishOffer(Company company, String title, String description,
-                               String dept, String speciality, int durationMonths, LocalDate deadline) {
+                               String dept, String speciality, int durationMonths, LocalDate deadline,
+                               String targetYear, String internshipType) {
         offerRepository.save(Offer.builder()
                 .company(company).title(title).description(description)
                 .requiredDepartment(dept).requiredSpeciality(speciality)
                 .durationMonths(durationMonths)
+                .targetYear(targetYear)
+                .internshipType(internshipType)
                 .status(OfferStatus.PUBLISHED)
                 .applicationDeadline(deadline)
                 .publishedAt(LocalDateTime.now().minusDays(3))

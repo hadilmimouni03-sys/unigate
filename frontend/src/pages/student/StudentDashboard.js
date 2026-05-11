@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { applicationApi, documentApi } from '../../services/api';
+import { applicationApi, documentApi, eligibilityApi, timetableApi } from '../../services/api';
 import { connectWebSocket, disconnectWebSocket } from '../../services/websocket';
 
 const STEPS = ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED'];
@@ -59,17 +59,39 @@ const STEP_ICONS = {
   ),
 };
 
+const TIMETABLE_DAYS  = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+const TIMETABLE_SLOTS = ['08:00', '10:00', '12:00', '14:00', '16:00'];
+const TIMETABLE_STYLE = {
+  LECTURE: { bg: 'bg-blue-50',   border: 'border-blue-300',   badge: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-500'   },
+  TD:      { bg: 'bg-green-50',  border: 'border-green-300',  badge: 'bg-green-100 text-green-700', dot: 'bg-green-500'  },
+  TP:      { bg: 'bg-violet-50', border: 'border-violet-300', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-500' },
+};
+const TT_DEFAULT = { bg: 'bg-slate-50', border: 'border-slate-300', badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' };
+const ttTimeRow = (t) => { const h = parseInt(('' + t).split(':')[0], 10); return TIMETABLE_SLOTS.findIndex((s) => parseInt(s.split(':')[0], 10) === h); };
+const ttToday = new Date().toLocaleString('en-US', { weekday: 'long' }).toUpperCase();
+
+const COND_LABELS = { GPA_GTE: 'Minimum GPA', CREDITS_GTE: 'Minimum Credits', STATUS_EQ: 'Status Required' };
+
 const StudentDashboard = () => {
   const { user } = useAuth();
-  const [application, setApplication] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [uploading, setUploading] = useState({});
-  const [liveMsg, setLiveMsg] = useState(null);
+  const [application,   setApplication]  = useState(null);
+  const [loading,       setLoading]      = useState(true);
+  const [submitting,    setSubmitting]   = useState(false);
+  const [activeTab,     setActiveTab]    = useState('overview');
+  const [uploading,     setUploading]    = useState({});
+  const [liveMsg,       setLiveMsg]      = useState(null);
+  const [eligRules,     setEligRules]    = useState([]);
+  const [timetable,     setTimetable]    = useState([]);
+  const [ttLoading,     setTtLoading]    = useState(false);
 
   useEffect(() => {
     loadApplication();
+    eligibilityApi.getMyRules().then(({ data }) => setEligRules(data)).catch(() => {});
+    setTtLoading(true);
+    timetableApi.getMy()
+      .then(({ data }) => setTimetable(data))
+      .catch(() => {})
+      .finally(() => setTtLoading(false));
     const ws = connectWebSocket(user.email, {
       onApplicationStatus: (d) => { setLiveMsg(d.message || 'Status updated'); loadApplication(); },
       onDocumentValidation: (d) => { setLiveMsg(d.message || 'Document validated'); loadApplication(); },
@@ -394,7 +416,12 @@ const StudentDashboard = () => {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Tab bar */}
         <div className="flex border-b border-slate-200 px-2">
-          {[['overview', 'Overview'], ['documents', 'Documents'], ['timeline', 'Timeline']].map(([key, label]) => (
+          {[
+            ['overview',  'Overview'],
+            ['documents', 'Documents'],
+            ['timeline',  'Timeline'],
+            ...(application?.status === 'APPROVED' ? [['timetable', 'Timetable']] : []),
+          ].map(([key, label]) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
@@ -476,11 +503,51 @@ const StudentDashboard = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Eligibility Requirements — always visible in Overview */}
+              <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-5">
+                <div className="flex items-start gap-2 mb-3">
+                  <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  <div>
+                    <h4 className="text-sm font-bold text-amber-900">Eligibility Requirements for Your Level</h4>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      {application?.registrationType?.replace(/_/g, ' ')}
+                      {eligRules.filter((r) => r.enabled).length > 0
+                        ? ` · ${eligRules.filter((r) => r.enabled).length} active rule${eligRules.filter((r) => r.enabled).length !== 1 ? 's' : ''} — make sure you meet these criteria before submitting`
+                        : ' · No specific requirements defined for your level yet'}
+                    </p>
+                  </div>
+                </div>
+                {eligRules.filter((r) => r.enabled).length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {eligRules.filter((r) => r.enabled).map((rule) => (
+                      <div key={rule.id} className="flex items-start gap-3 bg-white border border-amber-100 rounded-lg p-3 shadow-sm">
+                        <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                          <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                          </svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-800">{rule.ruleName}</p>
+                          <p className="text-xs text-amber-700 mt-0.5">
+                            {COND_LABELS[rule.conditionType] || rule.conditionType}: <strong>{rule.targetValue}</strong>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-600 italic">The administrator has not defined eligibility rules for your programme yet.</p>
+                )}
+              </div>
             </div>
           )}
 
           {/* Documents tab */}
           {activeTab === 'documents' && (
+            <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {DOC_TYPES.map((type) => {
                 const doc = docMap[type];
@@ -550,6 +617,7 @@ const StudentDashboard = () => {
                 );
               })}
             </div>
+            </div>
           )}
 
           {/* Timeline tab */}
@@ -574,6 +642,111 @@ const StudentDashboard = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Timetable tab */}
+          {activeTab === 'timetable' && (
+            <div className="space-y-4">
+              {ttLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"/>
+                </div>
+              ) : timetable.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                  {application?.classGroupName ? (
+                    <p className="text-slate-500 text-sm">No sessions scheduled for <strong>{application.classGroupName}</strong> yet. Check back soon.</p>
+                  ) : (
+                    <p className="text-slate-500 text-sm">Your timetable will appear here once you are assigned to a class group.</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Group info */}
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-100">
+                      Group: {timetable[0]?.groupName || application?.classGroupName}
+                    </span>
+                    <span className="text-xs text-slate-400">{timetable.length} sessions / week</span>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="flex flex-wrap gap-4">
+                    {Object.entries(TIMETABLE_STYLE).map(([type, cfg]) => (
+                      <div key={type} className="flex items-center gap-1.5">
+                        <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`}/>
+                        <span className="text-xs text-slate-500 font-medium">{type}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Grid */}
+                  <div className="overflow-x-auto rounded-xl border border-slate-200">
+                    <table className="w-full border-collapse text-xs" style={{ minWidth: '600px' }}>
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="w-20 px-3 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wide border-r border-slate-200">Time</th>
+                          {TIMETABLE_DAYS.map((d) => (
+                            <th key={d} className={`px-3 py-3 text-center text-xs font-bold uppercase tracking-wide border-r border-slate-200 last:border-r-0 ${d === ttToday ? 'text-blue-600 bg-blue-50' : 'text-slate-500'}`}>
+                              {d.slice(0, 3)}
+                              {d === ttToday && <span className="ml-1.5 inline-block w-1.5 h-1.5 bg-blue-600 rounded-full align-middle"/>}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {TIMETABLE_SLOTS.map((_, rowIdx) => (
+                          <tr key={rowIdx} className="border-b border-slate-100 last:border-b-0">
+                            <td className="px-2 py-3 text-center text-slate-400 font-medium bg-slate-50/50 border-r border-slate-200 whitespace-nowrap">
+                              {TIMETABLE_SLOTS[rowIdx]}<br/><span className="text-slate-300">–</span><br/>{TIMETABLE_SLOTS[rowIdx+1] || '18:00'}
+                            </td>
+                            {TIMETABLE_DAYS.map((day) => {
+                              const slot = timetable.find((s) => s.dayOfWeek === day && ttTimeRow(s.startTime) === rowIdx);
+                              const cfg  = slot ? (TIMETABLE_STYLE[slot.slotType] || TT_DEFAULT) : null;
+                              const isToday = day === ttToday;
+                              return (
+                                <td key={day} className={`px-2 py-2 min-h-[72px] border-r border-slate-100 last:border-r-0 ${isToday ? 'bg-blue-50/30' : ''}`}>
+                                  {slot && cfg ? (
+                                    <div className={`${cfg.bg} border ${cfg.border} rounded-lg p-2 h-full flex flex-col gap-1`}>
+                                      <p className="font-bold text-slate-800 leading-tight">{slot.courseName}</p>
+                                      <p className="text-slate-500">{('' + slot.startTime).slice(0,5)}–{('' + slot.endTime).slice(0,5)}</p>
+                                      {slot.room && <p className="text-slate-400">📍 {slot.room}</p>}
+                                      {slot.instructor && <p className="text-slate-400 truncate">{slot.instructor}</p>}
+                                      <span className={`mt-auto self-start px-1.5 py-0.5 rounded-full text-xs font-semibold ${cfg.badge}`}>{slot.slotType}</span>
+                                    </div>
+                                  ) : null}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Course list */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[...new Map(timetable.map((s) => [s.courseName, s])).values()].map((s) => {
+                      const cfg = TIMETABLE_STYLE[s.slotType] || TT_DEFAULT;
+                      return (
+                        <div key={s.courseName} className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50">
+                          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${cfg.dot}`}/>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-800 truncate">{s.courseName}</p>
+                            {s.instructor && <p className="text-xs text-slate-400 truncate">{s.instructor}</p>}
+                          </div>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${cfg.badge}`}>{s.slotType}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

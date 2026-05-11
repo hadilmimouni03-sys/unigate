@@ -13,4 +13,7 @@ public interface SwapRatingRepository extends JpaRepository<SwapRating, Long> {
 
     @Query("SELECT AVG(r.score) FROM SwapRating r WHERE r.ratee.id = :rateeId")
     Double findAverageScoreByRateeId(Long rateeId);
+
+    @Query("SELECT AVG(r.score) FROM SwapRating r")
+    Double findOverallAverageScore();
 }

@@ -4,10 +4,12 @@ import com.unigate.exception.BusinessException;
 import com.unigate.exception.ResourceNotFoundException;
 import com.unigate.internship.dto.InternshipApplicationDTO;
 import com.unigate.internship.dto.OfferDTO;
+import com.unigate.internship.entity.Company;
 import com.unigate.internship.entity.InternshipApplication;
 import com.unigate.internship.entity.Offer;
 import com.unigate.internship.enums.ApplicationInternshipStatus;
 import com.unigate.internship.enums.OfferStatus;
+import com.unigate.internship.repository.CompanyRepository;
 import com.unigate.internship.repository.InternshipApplicationRepository;
 import com.unigate.internship.repository.OfferRepository;
 import com.unigate.notification.event.NewOfferPublishedEvent;
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 public class InternshipService {
 
     private final OfferRepository offerRepository;
+    private final CompanyRepository companyRepository;
     private final InternshipApplicationRepository applicationRepository;
     private final StudentRepository studentRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -51,6 +54,13 @@ public class InternshipService {
                 ? offerRepository.findByStatusAndRequiredDepartment(OfferStatus.PUBLISHED, department)
                 : offerRepository.findByStatus(OfferStatus.PUBLISHED);
         return offers.stream().map(this::toOfferDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OfferDTO> getAllOffers() {
+        return offerRepository.findAll(org.springframework.data.domain.Sort.by(
+                org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
+                .stream().map(this::toOfferDTO).collect(Collectors.toList());
     }
 
     @Transactional
@@ -71,8 +81,17 @@ public class InternshipService {
 
     @Transactional
     public OfferDTO createOffer(OfferDTO dto) {
-        var company = new com.unigate.internship.entity.Company();
-        company.setId(dto.getCompanyId());
+        Company company;
+        if (dto.getCompanyId() != null) {
+            company = companyRepository.findById(dto.getCompanyId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Company", dto.getCompanyId()));
+        } else {
+            String name = (dto.getCompanyName() != null && !dto.getCompanyName().isBlank())
+                    ? dto.getCompanyName().trim() : "Unknown Company";
+            company = companyRepository.findByNameIgnoreCase(name)
+                    .orElseGet(() -> companyRepository.save(
+                            Company.builder().name(name).build()));
+        }
         Offer offer = Offer.builder()
                 .company(company)
                 .title(dto.getTitle())
@@ -83,6 +102,8 @@ public class InternshipService {
                 .targetYear(dto.getTargetYear())
                 .durationMonths(dto.getDurationMonths())
                 .applicationDeadline(dto.getApplicationDeadline())
+                .minGpa(dto.getMinGpa())
+                .linkedInUrl(dto.getLinkedInUrl())
                 .build();
         return toOfferDTO(offerRepository.save(offer));
     }
@@ -176,6 +197,8 @@ public class InternshipService {
                 .location(o.getCompany().getLocation())
                 .contactEmail(o.getCompany().getContactEmail())
                 .companyWebsite(o.getCompany().getWebsite())
+                .minGpa(o.getMinGpa())
+                .linkedInUrl(o.getLinkedInUrl())
                 .build();
     }
 

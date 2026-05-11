@@ -8,6 +8,7 @@ public class ReviewRequest {
     @NotNull private ReviewAction action;
     private String comment;
     private String refusalReason;
+    private Long classGroupId;
 
     public enum ReviewAction { APPROVE, REFUSE, REQUEST_INCOMPLETE }
 }

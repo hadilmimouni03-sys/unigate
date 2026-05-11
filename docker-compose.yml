@@ -36,6 +36,7 @@ services:
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
       APP_UPLOAD_DIR: /app/uploads
       FRONTEND_URL: http://localhost:3000
+      SERVER_PORT: 8080
     ports:
       - "8081:8080"
     depends_on:

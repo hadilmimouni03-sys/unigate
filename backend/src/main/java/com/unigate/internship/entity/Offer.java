@@ -32,6 +32,8 @@ public class Offer {
     private OfferStatus status = OfferStatus.DRAFT;
 
     private LocalDate applicationDeadline;
+    private Double minGpa;
+    private String linkedInUrl;
 
     @Column(updatable = false) private LocalDateTime createdAt;
     private LocalDateTime publishedAt;

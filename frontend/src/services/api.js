@@ -82,6 +82,8 @@ export const notificationApi = {
 
 export const timetableApi = {
   getByGroup: (groupId) => api.get(`/api/timetable/group/${groupId}`),
+  getGroups: () => api.get('/api/timetable/groups'),
+  getMy: () => api.get('/api/timetable/my'),
   create: (data) => api.post('/api/timetable', data),
   delete: (id) => api.delete(`/api/timetable/${id}`),
 };
@@ -105,6 +107,8 @@ export const eligibilityApi = {
     api.get('/api/eligibility/rules', { params: { department, yearLevel } }),
   saveRules: (yearLevel, rules) =>
     api.put('/api/eligibility/rules', rules, { params: { yearLevel } }),
+  getMyRules: () =>
+    api.get('/api/eligibility/my-rules'),
 };
 
 export const skillSwapApi = {
@@ -122,6 +126,7 @@ export const skillSwapApi = {
 export const internshipApi = {
   getOffers: (department) =>
     api.get('/api/internships/offers', { params: department ? { department } : {} }),
+  getAdminOffers: () => api.get('/api/internships/offers/admin'),
   createOffer: (data) => api.post('/api/internships/offers', data),
   publishOffer: (offerId) => api.post(`/api/internships/offers/${offerId}/publish`),
   apply: (offerId, coverLetter, cvFile) => {
@@ -135,6 +140,16 @@ export const internshipApi = {
   applicationsForOffer: (offerId) => api.get(`/api/internships/offers/${offerId}/applications`),
   updateStatus: (appId, status, note) =>
     api.patch(`/api/internships/applications/${appId}/status`, { status, note }),
+};
+
+export const superAdminApi = {
+  getAdmins: ()                 => api.get('/api/super-admin/admins'),
+  createAdmin: (data)           => api.post('/api/super-admin/admins', data),
+  getDepartments: ()            => api.get('/api/super-admin/departments'),
+  getSkillSwapStats: ()         => api.get('/api/super-admin/skillswap-stats'),
+  getRegistrationPeriods: ()    => api.get('/api/super-admin/registration-periods'),
+  createRegistrationPeriod: (d) => api.post('/api/super-admin/registration-periods', d),
+  closePeriod: (id)             => api.patch(`/api/super-admin/registration-periods/${id}/close`),
 };
 
 export default api;

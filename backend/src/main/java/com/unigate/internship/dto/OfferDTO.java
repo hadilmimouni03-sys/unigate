@@ -27,4 +27,6 @@ public class OfferDTO {
     private String location;
     private String contactEmail;
     private String companyWebsite;
+    private Double minGpa;
+    private String linkedInUrl;
 }

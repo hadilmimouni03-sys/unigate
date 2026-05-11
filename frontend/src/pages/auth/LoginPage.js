@@ -15,8 +15,10 @@ const ROLES = [
       </svg>
     ),
     demos: [
-      { label: 'Ahmed — Approved',     email: 'ahmed.ben.ali@student.unigate.com', pwd: 'Student@1234' },
-      { label: 'Sarra — Under Review', email: 'sarra.trabelsi@student.unigate.com', pwd: 'Student@1234' },
+      { label: 'Ahmed — Approved (CS)',       email: 'ahmed.ben.ali@student.unigate.com',  pwd: 'Student@1234' },
+      { label: 'Sarra — Under Review (CS)',   email: 'sarra.trabelsi@student.unigate.com', pwd: 'Student@1234' },
+      { label: 'Karim — Approved (GI)',       email: 'karim.hamdi@student.unigate.com',    pwd: 'Student@1234' },
+      { label: 'Amine — Submitted (GI)',      email: 'amine.belkadi@student.unigate.com',  pwd: 'Student@1234' },
     ],
   },
   {
@@ -81,6 +83,7 @@ const LoginPage = () => {
     try {
       const user = await login(form.email, form.password);
       if (user.role === 'STUDENT') navigate('/student');
+      else if (user.role === 'SUPER_ADMIN') navigate('/super-admin');
       else navigate('/admin');
     } catch {
       setError(t('auth.invalidCredentials'));

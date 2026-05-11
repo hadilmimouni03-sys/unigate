@@ -6,7 +6,7 @@ import { LANGUAGES } from '../i18n/translations';
 
 const NAV_ITEMS = (t, role) => {
   const student = role === 'STUDENT';
-  const admin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+  const admin = role === 'ADMIN';
   const items = [];
   if (student) {
     items.push(

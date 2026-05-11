@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import SuperAdminLayout from './layouts/SuperAdminLayout';
 
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -16,11 +17,16 @@ import SkillSwapPage from './pages/skillswap/SkillSwapPage';
 import InternshipsPage from './pages/internship/InternshipsPage';
 import GradeConfigPage from './pages/admin/GradeConfigPage';
 import EligibilityRulesPage from './pages/admin/EligibilityRulesPage';
+import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard';
+import SuperAdminDepartments from './pages/super-admin/SuperAdminDepartments';
+import SuperAdminAdmins from './pages/super-admin/SuperAdminAdmins';
+import SuperAdminRegistrationPeriod from './pages/super-admin/SuperAdminRegistrationPeriod';
 
 const HomeRedirect = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'STUDENT') return <Navigate to="/student" replace />;
+  if (user.role === 'SUPER_ADMIN') return <Navigate to="/super-admin" replace />;
   return <Navigate to="/admin" replace />;
 };
 
@@ -41,14 +47,28 @@ const App = () => (
           <Route path="/home"     element={<HomeRedirect />} />
 
           <Route path="/student"            element={withLayout(StudentDashboard,    ['STUDENT'])} />
-          <Route path="/admin"              element={withLayout(AdminDashboard,      ['ADMIN','SUPER_ADMIN'])} />
-          <Route path="/admin/grade-config" element={withLayout(GradeConfigPage,     ['ADMIN','SUPER_ADMIN'])} />
-          <Route path="/admin/eligibility"  element={withLayout(EligibilityRulesPage,['ADMIN','SUPER_ADMIN'])} />
+          <Route path="/admin"              element={withLayout(AdminDashboard,      ['ADMIN'])} />
+          <Route path="/admin/grade-config" element={withLayout(GradeConfigPage,     ['ADMIN'])} />
+          <Route path="/admin/eligibility"  element={withLayout(EligibilityRulesPage,['ADMIN'])} />
           <Route path="/timetable"          element={withLayout(TimetablePage,       null)} />
           <Route path="/grades"             element={withLayout(GradesPage,          null)} />
           <Route path="/skillswap"          element={withLayout(SkillSwapPage,       null)} />
           <Route path="/internships"        element={withLayout(InternshipsPage,     null)} />
           <Route path="/notifications"      element={withLayout(NotificationsPage,   null)} />
+
+          {/* Super Admin — dedicated layout with red theme */}
+          <Route
+            element={
+              <ProtectedRoute roles={['SUPER_ADMIN']}>
+                <SuperAdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/super-admin"              element={<SuperAdminDashboard />} />
+            <Route path="/super-admin/departments"  element={<SuperAdminDepartments />} />
+            <Route path="/super-admin/admins"       element={<SuperAdminAdmins />} />
+            <Route path="/super-admin/registration" element={<SuperAdminRegistrationPeriod />} />
+          </Route>
 
           <Route path="/unauthorized" element={
             <div className="min-h-screen flex items-center justify-center bg-slate-50">

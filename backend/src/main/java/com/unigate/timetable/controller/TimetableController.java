@@ -1,11 +1,14 @@
 package com.unigate.timetable.controller;
 
+import com.unigate.registration.entity.User;
+import com.unigate.timetable.dto.ClassGroupDTO;
 import com.unigate.timetable.dto.TimetableSlotDTO;
 import com.unigate.timetable.service.TimetableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +19,17 @@ import java.util.List;
 public class TimetableController {
 
     private final TimetableService timetableService;
+
+    @GetMapping("/groups")
+    public ResponseEntity<List<ClassGroupDTO>> groups() {
+        return ResponseEntity.ok(timetableService.getAllGroups());
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<List<TimetableSlotDTO>> myTimetable(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(timetableService.getStudentTimetable(user.getId()));
+    }
 
     @GetMapping("/group/{groupId}")
     public ResponseEntity<List<TimetableSlotDTO>> byGroup(@PathVariable Long groupId) {

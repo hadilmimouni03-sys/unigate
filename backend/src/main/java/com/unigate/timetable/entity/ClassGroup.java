@@ -15,4 +15,5 @@ public class ClassGroup {
     private String department;
     private int year;
     private String semester;
+    private String yearLevel;
 }

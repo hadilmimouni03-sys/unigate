@@ -37,6 +37,12 @@ public class InternshipController {
         return ResponseEntity.ok(internshipService.getPublishedOffers(department));
     }
 
+    @GetMapping("/offers/admin")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<List<OfferDTO>> listAllOffers() {
+        return ResponseEntity.ok(internshipService.getAllOffers());
+    }
+
     @PostMapping("/offers")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<OfferDTO> createOffer(@RequestBody OfferDTO dto) {

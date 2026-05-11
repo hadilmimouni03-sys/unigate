@@ -10,6 +10,7 @@ import com.unigate.registration.entity.Student;
 import com.unigate.registration.enums.ApplicationEvent;
 import com.unigate.registration.enums.ApplicationStatus;
 import com.unigate.registration.enums.DocumentStatus;
+import com.unigate.registration.enums.RegistrationType;
 import com.unigate.registration.event.ApplicationStatusChangedEvent;
 import com.unigate.registration.repository.ApplicationRepository;
 import com.unigate.registration.repository.StudentRepository;
@@ -100,24 +101,49 @@ public class ApplicationService {
         app.setDecidedAt(LocalDateTime.now());
         app = applicationRepository.save(app);
 
-        // Auto-assign student to a ClassGroup on approval
+        // Assign student to a ClassGroup on approval
         if (newStatus == ApplicationStatus.APPROVED) {
-            autoAssignClassGroup(app.getStudent());
+            if (request.getClassGroupId() != null) {
+                assignClassGroup(app.getStudent(), request.getClassGroupId());
+            } else {
+                autoAssignClassGroup(app.getStudent());
+            }
         }
 
         eventPublisher.publishEvent(new ApplicationStatusChangedEvent(this, app, prev, newStatus));
         return toDTO(app);
     }
 
-    private void autoAssignClassGroup(Student student) {
-        if (student.getClassGroup() != null) return;
-        Optional<ClassGroup> group = classGroupRepository
-                .findFirstByDepartmentOrderByNameAsc(student.getDepartment());
-        group.ifPresent(g -> {
+    private void assignClassGroup(Student student, Long classGroupId) {
+        classGroupRepository.findById(classGroupId).ifPresent(g -> {
             student.setClassGroup(g);
             studentRepository.save(student);
-            log.info("Auto-assigned student {} to class group {}", student.getEmail(), g.getName());
+            log.info("Admin-assigned student {} to class group {}", student.getEmail(), g.getName());
         });
+    }
+
+    private void autoAssignClassGroup(Student student) {
+        if (student.getClassGroup() != null) return;
+        Integer targetYear = mapRegistrationTypeToYear(student.getRegistrationType());
+        if (targetYear == null) return;
+        classGroupRepository.findFirstByDepartmentAndYearOrderByNameAsc(student.getDepartment(), targetYear)
+                .ifPresent(g -> {
+                    student.setClassGroup(g);
+                    studentRepository.save(student);
+                    log.info("Auto-assigned student {} to class group {}", student.getEmail(), g.getName());
+                });
+    }
+
+    private Integer mapRegistrationTypeToYear(RegistrationType type) {
+        if (type == null) return null;
+        return switch (type) {
+            case FIRST_YEAR_ING -> 1;
+            case SECOND_YEAR_ING -> 2;
+            case THIRD_YEAR_ING -> 3;
+            case MASTER_M1 -> 4;
+            case MASTER_M2 -> 5;
+            case EXCHANGE_PROGRAM, DOUBLE_DIPLOMA -> null;
+        };
     }
 
     @Transactional(readOnly = true)
@@ -195,6 +221,7 @@ public class ApplicationService {
                 .documentsValid((int) validCount)
                 .classGroupId(classGroupId)
                 .classGroupName(classGroupName)
+                .studentDepartment(student.getDepartment())
                 .build();
     }
 }

@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface ClassGroupRepository extends JpaRepository<ClassGroup, Long> {
     List<ClassGroup> findByDepartmentAndYear(String department, int year);
     Optional<ClassGroup> findFirstByDepartmentOrderByNameAsc(String department);
+    Optional<ClassGroup> findFirstByDepartmentAndYearOrderByNameAsc(String department, int year);
 }

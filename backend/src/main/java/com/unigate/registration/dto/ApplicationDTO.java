@@ -28,4 +28,5 @@ public class ApplicationDTO {
     private int documentsValid;
     private Long classGroupId;
     private String classGroupName;
+    private String studentDepartment;
 }

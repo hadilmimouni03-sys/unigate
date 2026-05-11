@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 
 const REGISTRATION_TYPES = [
   { value: 'FIRST_YEAR_ING', label: '1st Year Engineering' },
@@ -12,13 +13,7 @@ const REGISTRATION_TYPES = [
   { value: 'EXCHANGE_PROGRAM', label: 'Exchange Program' },
 ];
 
-const DEPARTMENTS = [
-  'Computer Science',
-  'Electrical Engineering',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Industrial Engineering',
-];
+const FALLBACK_DEPARTMENTS = ['Computer Science', 'Génie Industriel'];
 
 const STEP_LABELS = ['Personal Info', 'Program', 'Confirm'];
 
@@ -39,10 +34,17 @@ const RegisterPage = () => {
     registrationType: '', department: '', speciality: '',
     partnerUniversity: '', partnerCountry: '', targetSemester: '',
   });
+  const [departments, setDepartments] = useState(FALLBACK_DEPARTMENTS);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get('/api/public/departments')
+      .then((res) => { if (res.data?.length) setDepartments(res.data); })
+      .catch(() => {});
+  }, []);
 
   const isSelectiveType = ['MASTER_M1', 'MASTER_M2', 'DOUBLE_DIPLOMA', 'EXCHANGE_PROGRAM'].includes(form.registrationType);
   const isExchangeOrDD  = ['DOUBLE_DIPLOMA', 'EXCHANGE_PROGRAM'].includes(form.registrationType);
@@ -202,7 +204,7 @@ const RegisterPage = () => {
                         onChange={(e) => set('department', e.target.value)}
                         className={selectCls}>
                         <option value="">Select a department…</option>
-                        {DEPARTMENTS.map((d) => <option key={d} value={d}>{d}</option>)}
+                        {departments.map((d) => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </Field>
 

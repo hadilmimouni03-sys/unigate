@@ -8,6 +8,7 @@ import com.unigate.registration.enums.Role;
 import com.unigate.registration.service.ApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminController {
 
     private final ApplicationService applicationService;
@@ -30,6 +32,8 @@ public class AdminController {
 
         boolean isSuperAdmin = user.getRole() == Role.SUPER_ADMIN;
         String dept = user.getDepartment();
+
+        log.info("Admin [{}] dept=[{}] requested applications list status={}", user.getEmail(), dept, status);
 
         List<ApplicationDTO> result;
         if (isSuperAdmin || dept == null) {

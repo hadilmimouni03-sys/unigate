@@ -28,15 +28,17 @@ public class ApplicationStateMachineService {
                 .end(ApplicationStatus.APPROVED);
         builder.configureTransitions()
                 .withExternal().source(ApplicationStatus.DRAFT).target(ApplicationStatus.SUBMITTED).event(ApplicationEvent.SUBMIT).and()
-                // Admin can start review from SUBMITTED
+                
                 .withExternal().source(ApplicationStatus.SUBMITTED).target(ApplicationStatus.UNDER_REVIEW).event(ApplicationEvent.ASSIGN_REVIEWER).and()
-                // Admin can act directly from SUBMITTED (without explicit start-review step)
+                
                 .withExternal().source(ApplicationStatus.SUBMITTED).target(ApplicationStatus.INCOMPLETE).event(ApplicationEvent.REQUEST_INCOMPLETE).and()
+                
                 .withExternal().source(ApplicationStatus.SUBMITTED).target(ApplicationStatus.APPROVED).event(ApplicationEvent.APPROVE).and()
-                // Admin can act from UNDER_REVIEW
+                
                 .withExternal().source(ApplicationStatus.UNDER_REVIEW).target(ApplicationStatus.INCOMPLETE).event(ApplicationEvent.REQUEST_INCOMPLETE).and()
+                
                 .withExternal().source(ApplicationStatus.UNDER_REVIEW).target(ApplicationStatus.APPROVED).event(ApplicationEvent.APPROVE).and()
-                // Student resubmits
+                
                 .withExternal().source(ApplicationStatus.INCOMPLETE).target(ApplicationStatus.SUBMITTED).event(ApplicationEvent.RESUBMIT);
         return builder.build();
     }

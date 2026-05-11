@@ -1,6 +1,8 @@
 package com.unigate.timetable.service;
 
 import com.unigate.exception.ResourceNotFoundException;
+import com.unigate.registration.repository.StudentRepository;
+import com.unigate.timetable.dto.ClassGroupDTO;
 import com.unigate.timetable.dto.TimetableSlotDTO;
 import com.unigate.timetable.entity.ClassGroup;
 import com.unigate.timetable.entity.Course;
@@ -12,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +25,7 @@ public class TimetableService {
     private final TimetableSlotRepository slotRepository;
     private final CourseRepository courseRepository;
     private final ClassGroupRepository groupRepository;
+    private final StudentRepository studentRepository;
 
     @Transactional(readOnly = true)
     public List<TimetableSlotDTO> getByGroup(Long groupId) {
@@ -58,6 +62,30 @@ public class TimetableService {
     @Transactional
     public void deleteSlot(Long id) {
         slotRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClassGroupDTO> getAllGroups() {
+        return groupRepository.findAll().stream()
+                .map(g -> ClassGroupDTO.builder()
+                        .id(g.getId())
+                        .name(g.getName())
+                        .department(g.getDepartment())
+                        .year(g.getYear())
+                        .semester(g.getSemester())
+                        .yearLevel(g.getYearLevel())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TimetableSlotDTO> getStudentTimetable(Long studentId) {
+        return studentRepository.findById(studentId)
+                .filter(s -> s.getClassGroup() != null)
+                .map(s -> slotRepository
+                        .findByClassGroupIdOrderByDayOfWeekAscStartTimeAsc(s.getClassGroup().getId())
+                        .stream().map(this::toDTO).collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
     }
 
     private TimetableSlotDTO toDTO(TimetableSlot s) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { adminApi, documentApi } from '../../services/api';
+import { adminApi, documentApi, timetableApi } from '../../services/api';
 
 const DOC_STATUS_STYLE = {
   VALID:            'bg-green-100 text-green-700 border-green-200',
@@ -32,6 +32,8 @@ const ApplicationReview = ({ applicationId, onBack }) => {
   const [refusalReason, setRefusalReason] = useState('');
   const [annotatingDocId, setAnnotatingDocId] = useState(null);
   const [annotation, setAnnotation] = useState('');
+  const [allGroups, setAllGroups] = useState([]);
+  const [selectedGroupId, setSelectedGroupId] = useState('');
 
   useEffect(() => {
     adminApi.getApplication(applicationId)
@@ -39,14 +41,27 @@ const ApplicationReview = ({ applicationId, onBack }) => {
       .finally(() => setLoading(false));
   }, [applicationId]);
 
+  useEffect(() => {
+    timetableApi.getGroups()
+      .then(({ data }) => setAllGroups(data))
+      .catch(() => {});
+  }, []);
+
   const handleReview = async (action) => {
     if (action === 'REFUSE' && !refusalReason.trim()) {
       alert('Please provide a refusal reason');
       return;
     }
+    if (action === 'APPROVE' && relevantGroups.length > 0 && !selectedGroupId) {
+      if (!window.confirm('No class group selected. The system will attempt to auto-assign. Continue?')) return;
+    }
     setSubmitting(true);
     try {
-      await adminApi.review(applicationId, { action, comment, refusalReason });
+      const body = { action, comment, refusalReason };
+      if (action === 'APPROVE' && selectedGroupId) {
+        body.classGroupId = Number(selectedGroupId);
+      }
+      await adminApi.review(applicationId, body);
       onBack();
     } catch (err) {
       alert(err.response?.data?.message || 'Action failed');
@@ -95,6 +110,14 @@ const ApplicationReview = ({ applicationId, onBack }) => {
   const statusCfg = APP_STATUS_CFG[app?.status] || APP_STATUS_CFG.DRAFT;
   const validDocs = app?.documents?.filter((d) => d.status === 'VALID').length || 0;
   const totalDocs = app?.documents?.length || 0;
+
+  const REG_TYPE_TO_YEAR = {
+    FIRST_YEAR_ING: 1, SECOND_YEAR_ING: 2, THIRD_YEAR_ING: 3, MASTER_M1: 4, MASTER_M2: 5,
+  };
+  const studentYear = REG_TYPE_TO_YEAR[app?.registrationType];
+  const relevantGroups = allGroups
+    .filter((g) => g.department === app?.studentDepartment && (studentYear == null || g.year === studentYear))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-5">
@@ -275,6 +298,47 @@ const ApplicationReview = ({ applicationId, onBack }) => {
                     />
                   </div>
                 )}
+
+                {/* Class Group Assignment — required before approving */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                    Class Group Assignment
+                  </label>
+                  {relevantGroups.length > 0 ? (
+                    <>
+                      <div className="relative">
+                        <select
+                          value={selectedGroupId}
+                          onChange={(e) => setSelectedGroupId(e.target.value)}
+                          className="w-full h-10 pl-3 pr-8 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none"
+                        >
+                          <option value="">— Select a group (required for approval) —</option>
+                          {relevantGroups.map((g) => (
+                            <option key={g.id} value={g.id}>
+                              {g.name}{g.yearLevel ? ` · ${g.yearLevel}` : ''}{g.semester ? ` · ${g.semester}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path d="M19 9l-7 7-7-7"/>
+                        </svg>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1.5">
+                        Determines which timetable the student sees after approval.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+                      <svg className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      <p className="text-xs text-amber-700">
+                        No class groups found for <strong>{app?.studentDepartment}</strong>
+                        {studentYear ? ` — Year ${studentYear}` : ''}. Create groups in the Timetable section first.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-3 pt-1">
                   <button
