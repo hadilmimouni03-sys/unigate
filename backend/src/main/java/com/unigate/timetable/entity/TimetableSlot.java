@@ -29,5 +29,5 @@ public class TimetableSlot {
     @Column(nullable = false) private LocalTime endTime;
     private String room;
     private String instructor;
-    private String slotType; // LECTURE, TD, TP
+    private String slotType; 
 }

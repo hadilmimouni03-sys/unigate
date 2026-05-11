@@ -56,7 +56,6 @@ const App = () => (
           <Route path="/internships"        element={withLayout(InternshipsPage,     null)} />
           <Route path="/notifications"      element={withLayout(NotificationsPage,   null)} />
 
-          {/* Super Admin — dedicated layout with red theme */}
           <Route
             element={
               <ProtectedRoute roles={['SUPER_ADMIN']}>

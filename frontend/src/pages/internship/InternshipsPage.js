@@ -24,7 +24,6 @@ const EMPTY_FORM = {
   durationMonths: '', minGpa: '', applicationDeadline: '', linkedInUrl: '',
 };
 
-// Compute weighted GPA from grade list
 function computeGpa(grades) {
   const valid = grades.filter((g) => g.finalMark != null && g.credits > 0);
   if (valid.length === 0) return null;
@@ -70,10 +69,8 @@ const InternshipsPage = () => {
   const [viewingOffer, setViewingOffer] = useState(null);
   const [loading, setLoading]           = useState(false);
 
-  // Student GPA (for minGpa check)
   const [studentGpa, setStudentGpa] = useState(null);
 
-  // Create offer modal
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm]             = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -90,7 +87,6 @@ const InternshipsPage = () => {
 
   useEffect(() => { loadOffers(); }, [isAdmin]);
 
-  // Fetch student GPA once
   useEffect(() => {
     if (!isStudent) return;
     gradeApi.myGrades()
@@ -103,7 +99,6 @@ const InternshipsPage = () => {
     return Math.ceil((new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24));
   };
 
-  // Reactive filtering — recomputes on every state change, no page reload needed
   const filteredOffers = useMemo(() => offers.filter((o) => {
     const q = search.toLowerCase();
     const matchesSearch = !q
@@ -112,7 +107,6 @@ const InternshipsPage = () => {
       || o.description?.toLowerCase().includes(q);
     const matchesLevel = levelFilter === 'all' || o.targetYear === levelFilter;
     const matchesType  = typeFilter  === 'all' || o.internshipType === typeFilter;
-    // Admins can also filter drafts; students only see published (API already filters)
     return matchesSearch && matchesLevel && matchesType;
   }), [offers, search, levelFilter, typeFilter]);
 
@@ -157,7 +151,6 @@ const InternshipsPage = () => {
     }
   };
 
-  // GPA eligibility helpers
   const gpaBlock = (offer) =>
     isStudent && offer.minGpa != null && studentGpa != null && studentGpa < offer.minGpa;
 
@@ -167,7 +160,6 @@ const InternshipsPage = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Internships & Opportunities</h1>
@@ -188,7 +180,6 @@ const InternshipsPage = () => {
         )}
       </div>
 
-      {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="relative flex-1 min-w-48">
@@ -232,7 +223,6 @@ const InternshipsPage = () => {
       {loading ? <Spinner/> : (
         <div className="space-y-8">
 
-          {/* Recommended (students only, published offers) */}
           {!isAdmin && recommended.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -276,7 +266,6 @@ const InternshipsPage = () => {
             </div>
           )}
 
-          {/* All Opportunities */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold text-slate-900">
@@ -345,7 +334,6 @@ const InternshipsPage = () => {
                           </span>
                         )}
                       </div>
-                      {/* GPA warning on card */}
                       {blocked && (
                         <p className="text-xs text-amber-600 mb-3">
                           Min GPA {offer.minGpa} required (yours: {studentGpa?.toFixed(2)})
@@ -366,13 +354,11 @@ const InternshipsPage = () => {
         </div>
       )}
 
-      {/* ── VIEW DETAILS MODAL ── */}
       {viewingOffer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setViewingOffer(null)}/>
           <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto p-6 space-y-5">
 
-            {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl shrink-0">
@@ -391,7 +377,6 @@ const InternshipsPage = () => {
               </button>
             </div>
 
-            {/* Tags */}
             <div className="flex flex-wrap gap-2">
               {viewingOffer.requiredDepartment && (
                 <span className="text-xs px-2.5 py-1 rounded-full bg-blue-50 border border-blue-300 text-blue-700 font-medium">
@@ -433,7 +418,6 @@ const InternshipsPage = () => {
               )}
             </div>
 
-            {/* Description */}
             {viewingOffer.description && (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">About this internship</h3>
@@ -441,7 +425,6 @@ const InternshipsPage = () => {
               </div>
             )}
 
-            {/* Required speciality */}
             {viewingOffer.requiredSpeciality && (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-1">Required Speciality</h3>
@@ -449,7 +432,6 @@ const InternshipsPage = () => {
               </div>
             )}
 
-            {/* Contact & Links */}
             {(viewingOffer.contactEmail || viewingOffer.companyWebsite || viewingOffer.location || viewingOffer.linkedInUrl) && (
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
                 <h3 className="text-sm font-semibold text-slate-700">Contact & Links</h3>
@@ -488,7 +470,6 @@ const InternshipsPage = () => {
                     <svg className="w-4 h-4 text-blue-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M19 0h-14c-2.76 0-5 2.24-5 5v14c0 2.76 2.24 5 5 5h14c2.76 0 5-2.24 5-5v-14c0-2.76-2.24-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.27c-.97 0-1.75-.79-1.75-1.76s.78-1.76 1.75-1.76 1.75.79 1.75 1.76-.78 1.76-1.75 1.76zm13.5 12.27h-3v-5.6c0-3.37-4-3.12-4 0v5.6h-3v-11h3v1.77c1.39-2.58 7-2.77 7 2.47v6.76z"/>
                     </svg>
-                    {/* target="_blank" ensures LinkedIn opens in a new tab without leaving UniGate */}
                     <a href={viewingOffer.linkedInUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                       View on LinkedIn
                     </a>
@@ -497,7 +478,6 @@ const InternshipsPage = () => {
               </div>
             )}
 
-            {/* GPA eligibility warning (students) */}
             {isStudent && viewingOffer.minGpa != null && (
               <div className={`rounded-xl px-4 py-3 text-sm ${
                 gpaBlock(viewingOffer)
@@ -518,7 +498,6 @@ const InternshipsPage = () => {
               </div>
             )}
 
-            {/* Action buttons */}
             <div className="flex gap-3">
               <button
                 onClick={() => setViewingOffer(null)}
@@ -545,7 +524,6 @@ const InternshipsPage = () => {
         </div>
       )}
 
-      {/* ── CREATE OFFER MODAL ── */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowCreate(false)}/>

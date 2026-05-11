@@ -58,7 +58,6 @@ public class DataInitializer {
     @Order(0)
     CommandLineRunner repairDisabledAccounts() {
         return args -> {
-            // Fix any stale rows regardless of column naming conventions
             userRepository.findAll().stream()
                 .filter(u -> !u.isEnabled() || !u.isAccountNonLocked())
                 .forEach(u -> {
@@ -85,7 +84,6 @@ public class DataInitializer {
     private void ensureAdminUser(String first, String last, String email, String pwd, Role role, String department) {
         userRepository.findByEmail(email).ifPresentOrElse(
             u -> {
-                // Always sync password/state so Docker rebuilds never get stale credentials
                 u.setPassword(pwd);
                 u.setEnabled(true);
                 u.setAccountNonLocked(true);
@@ -105,7 +103,6 @@ public class DataInitializer {
 
             String pwd = passwordEncoder.encode("Student@1234");
 
-            // Student 1: 3rd year Ing — APPROVED
             Student s1 = buildStudent("Ahmed", "Ben Ali", "ahmed.ben.ali@student.unigate.com", pwd,
                     RegistrationType.THIRD_YEAR_ING, "Computer Science", "Software Engineering", null, null, null);
             userRepository.save(s1);
@@ -118,7 +115,6 @@ public class DataInitializer {
                     .build();
             applicationRepository.save(a1);
 
-            // Student 2: Master M1 — UNDER_REVIEW
             Student s2 = buildStudent("Sarra", "Trabelsi", "sarra.trabelsi@student.unigate.com", pwd,
                     RegistrationType.MASTER_M1, "Computer Science", "Artificial Intelligence", null, null, null);
             userRepository.save(s2);
@@ -130,7 +126,6 @@ public class DataInitializer {
                     .build();
             applicationRepository.save(a2);
 
-            // Student 3: Exchange — SUBMITTED
             Student s3 = buildStudent("Lucas", "Dupont", "lucas.dupont@student.unigate.com", pwd,
                     RegistrationType.EXCHANGE_PROGRAM, "Computer Science", "Networks", "University of Lyon", "France", "S5");
             userRepository.save(s3);
@@ -141,7 +136,6 @@ public class DataInitializer {
                     .build();
             applicationRepository.save(a3);
 
-            // Student 4: 1st year Ing — DRAFT
             Student s4 = buildStudent("Mariam", "Khelifi", "mariam.khelifi@student.unigate.com", pwd,
                     RegistrationType.FIRST_YEAR_ING, "Computer Science", null, null, null, null);
             userRepository.save(s4);
@@ -151,7 +145,6 @@ public class DataInitializer {
                     .build();
             applicationRepository.save(a4);
 
-            // Student 5: Master M2 — INCOMPLETE
             Student s5 = buildStudent("Yassine", "Gharbi", "yassine.gharbi@student.unigate.com", pwd,
                     RegistrationType.MASTER_M2, "Computer Science", "Cybersecurity", null, null, null);
             userRepository.save(s5);
@@ -176,7 +169,6 @@ public class DataInitializer {
 
             String pwd = passwordEncoder.encode("Student@1234");
 
-            // GI Student 1: 3rd year — APPROVED
             Student gi1 = buildStudent("Karim", "Hamdi", "karim.hamdi@student.unigate.com", pwd,
                     RegistrationType.THIRD_YEAR_ING, "Génie Industriel", "Production Industrielle", null, null, null);
             userRepository.save(gi1);
@@ -188,7 +180,6 @@ public class DataInitializer {
                     .decidedAt(LocalDateTime.now().minusDays(7))
                     .build());
 
-            // GI Student 2: Master M1 — APPROVED
             Student gi2 = buildStudent("Nadia", "Slama", "nadia.slama@student.unigate.com", pwd,
                     RegistrationType.MASTER_M1, "Génie Industriel", "Logistique", null, null, null);
             userRepository.save(gi2);
@@ -200,7 +191,6 @@ public class DataInitializer {
                     .decidedAt(LocalDateTime.now().minusDays(3))
                     .build());
 
-            // GI Student 3: 1st year — SUBMITTED (for admin review testing)
             Student gi3 = buildStudent("Amine", "Belkadi", "amine.belkadi@student.unigate.com", pwd,
                     RegistrationType.FIRST_YEAR_ING, "Génie Industriel", "Production Industrielle", null, null, null);
             userRepository.save(gi3);
@@ -227,20 +217,17 @@ public class DataInitializer {
             Course logi  = saveCourse("GI201", "Logistics & Supply Chain",  "Génie Industriel", 5);
             Course lean  = saveCourse("GI202", "Lean Manufacturing",        "Génie Industriel", 4);
 
-            // GI class groups
             ClassGroup giG1 = classGroupRepository.save(ClassGroup.builder()
                     .name("GI3-Production-A").department("Génie Industriel").year(3).semester("S5").yearLevel("3rd Year").build());
             ClassGroup giM1 = classGroupRepository.save(ClassGroup.builder()
                     .name("GIM1-Logistique").department("Génie Industriel").year(4).semester("S7").yearLevel("M1").build());
 
-            // Timetable for GI 3rd year group
             saveSlot(prod,  giG1, DayOfWeek.MONDAY,    "08:00", "10:00", "D101", "Dr. Bensaad", "LECTURE");
             saveSlot(qual,  giG1, DayOfWeek.MONDAY,    "10:00", "12:00", "D102", "Dr. Ferhat",  "LECTURE");
             saveSlot(prod,  giG1, DayOfWeek.WEDNESDAY, "14:00", "16:00", "Lab6", "Dr. Bensaad", "TD");
             saveSlot(maint, giG1, DayOfWeek.TUESDAY,   "08:00", "10:00", "D103", "Dr. Ayari",   "LECTURE");
             saveSlot(maint, giG1, DayOfWeek.THURSDAY,  "10:00", "12:00", "Lab7", "Dr. Ayari",   "TP");
 
-            // Timetable for GI Master Logistique group
             saveSlot(logi, giM1, DayOfWeek.MONDAY,    "10:00", "12:00", "D201", "Dr. Jlassi",  "LECTURE");
             saveSlot(lean, giM1, DayOfWeek.TUESDAY,   "08:00", "10:00", "D202", "Dr. Miled",   "LECTURE");
             saveSlot(logi, giM1, DayOfWeek.THURSDAY,  "14:00", "16:00", "Lab8", "Dr. Jlassi",  "TP");
@@ -344,7 +331,6 @@ public class DataInitializer {
         return args -> {
             if (courseRepository.count() > 0) return;
 
-            // Courses
             Course algo = saveCourse("INFO101", "Algorithms & Data Structures", "Computer Science", 6);
             Course dbms = saveCourse("INFO102", "Database Management Systems", "Computer Science", 5);
             Course networks = saveCourse("INFO103", "Computer Networks", "Computer Science", 4);
@@ -358,7 +344,6 @@ public class DataInitializer {
             Course maths = saveCourse("MATH101", "Linear Algebra", "Mathematics", 4);
             Course stats = saveCourse("MATH102", "Probability & Statistics", "Mathematics", 4);
 
-            // Class Groups
             ClassGroup g1 = classGroupRepository.save(ClassGroup.builder()
                     .name("ING3-CS-A").department("Computer Science").year(3).semester("S5").yearLevel("3rd Year").build());
             ClassGroup g2 = classGroupRepository.save(ClassGroup.builder()
@@ -366,7 +351,6 @@ public class DataInitializer {
             ClassGroup g3 = classGroupRepository.save(ClassGroup.builder()
                     .name("MASTER-AI").department("Computer Science").year(4).semester("S7").yearLevel("M1").build());
 
-            // Timetable for Group 1 (ING3-CS-A)
             saveSlot(algo, g1, DayOfWeek.MONDAY, "08:00", "10:00", "A101", "Dr. Mansouri", "LECTURE");
             saveSlot(algo, g1, DayOfWeek.WEDNESDAY, "14:00", "16:00", "Lab1", "Dr. Mansouri", "TD");
             saveSlot(dbms, g1, DayOfWeek.MONDAY, "10:00", "12:00", "A102", "Dr. Zouari", "LECTURE");
@@ -377,7 +361,6 @@ public class DataInitializer {
             saveSlot(maths, g1, DayOfWeek.TUESDAY, "14:00", "16:00", "A103", "Prof. Chaabane", "LECTURE");
             saveSlot(stats, g1, DayOfWeek.THURSDAY, "14:00", "16:00", "A104", "Prof. Chaabane", "LECTURE");
 
-            // Timetable for Group 2 (ING3-CS-B) - offset times
             saveSlot(algo, g2, DayOfWeek.MONDAY, "10:00", "12:00", "A101", "Dr. Mansouri", "LECTURE");
             saveSlot(algo, g2, DayOfWeek.THURSDAY, "14:00", "16:00", "Lab1", "Dr. Mansouri", "TD");
             saveSlot(dbms, g2, DayOfWeek.TUESDAY, "08:00", "10:00", "A102", "Dr. Zouari", "LECTURE");
@@ -385,7 +368,6 @@ public class DataInitializer {
             saveSlot(networks, g2, DayOfWeek.WEDNESDAY, "10:00", "12:00", "B201", "Dr. Fersi", "LECTURE");
             saveSlot(webdev, g2, DayOfWeek.FRIDAY, "14:00", "16:00", "Lab4", "Dr. Riahi", "TP");
 
-            // Timetable for Group 3 (MASTER-AI)
             saveSlot(ai, g3, DayOfWeek.MONDAY, "08:30", "10:30", "C301", "Dr. Baccouche", "LECTURE");
             saveSlot(ml, g3, DayOfWeek.MONDAY, "10:30", "12:30", "C301", "Dr. Baccouche", "LECTURE");
             saveSlot(ai, g3, DayOfWeek.WEDNESDAY, "14:00", "17:00", "Lab5", "Dr. Baccouche", "TP");
@@ -419,7 +401,6 @@ public class DataInitializer {
             Skill ts     = saveSkill("TypeScript",        "Web");
             Skill net    = saveSkill("Computer Networks", "Systems");
 
-            // Skill offers for Ahmed
             userRepository.findByEmail("ahmed.ben.ali@student.unigate.com").ifPresent(user -> {
                 Student s = (Student) user;
                 SkillOffer offer = SkillOffer.builder()
@@ -432,7 +413,6 @@ public class DataInitializer {
                 skillOfferRepository.save(offer);
             });
 
-            // Skill offers for Sarra
             userRepository.findByEmail("sarra.trabelsi@student.unigate.com").ifPresent(user -> {
                 Student s = (Student) user;
                 SkillOffer offer = SkillOffer.builder()
@@ -445,7 +425,6 @@ public class DataInitializer {
                 skillOfferRepository.save(offer);
             });
 
-            // Skill offers for Yassine
             userRepository.findByEmail("yassine.gharbi@student.unigate.com").ifPresent(user -> {
                 Student s = (Student) user;
                 SkillOffer offer = SkillOffer.builder()
@@ -488,7 +467,6 @@ public class DataInitializer {
                     .name("Amdocs Tunisia").sector("Telecom Software").location("Tunis, Tunisia")
                     .website("https://www.amdocs.com").contactEmail("recruiting@amdocs.com.tn").build());
 
-            // Published offers
             publishOffer(biat, "Full-Stack Developer Intern",
                     "Join our Digital Transformation team to build modern web banking interfaces using React and Spring Boot.",
                     "Computer Science", "Software Engineering", 6, LocalDate.now().plusMonths(1),
@@ -528,7 +506,6 @@ public class DataInitializer {
         };
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private com.unigate.registration.entity.User buildUser(String first, String last, String email, String pwd, Role role, String department) {
         com.unigate.registration.entity.User u = new com.unigate.registration.entity.User();

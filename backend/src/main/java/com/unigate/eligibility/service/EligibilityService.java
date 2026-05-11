@@ -47,18 +47,14 @@ public class EligibilityService {
         return ruleRepository.saveAll(saved).stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    /**
-     * Checks a student against eligibility rules for their department + year level.
-     * Returns a list of human-readable violation messages (empty = all pass).
-     */
+    
     @Transactional(readOnly = true)
     public List<String> checkStudent(Long studentId) {
         Student student = studentRepository.findById(studentId).orElse(null);
         if (student == null) return List.of();
 
         String dept = student.getDepartment();
-        // Year level is not stored on Student in current model — use a placeholder.
-        // When the student's year level is available, replace with the real field.
+       
         String yearLevel = "1st Year";
 
         List<EligibilityRule> rules = ruleRepository.findByDepartmentAndYearLevel(dept, yearLevel)

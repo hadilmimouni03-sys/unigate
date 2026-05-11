@@ -47,7 +47,6 @@ public class SimulationResult {
         private double examWeight;
         private double tpWeight;
         private boolean passed;
-        /** "IMPOSSIBLE" | "ALREADY_VALIDATED" | "X.XX" | null (no CC yet) */
         private String requiredExam;
         private boolean adminEntered;
     }

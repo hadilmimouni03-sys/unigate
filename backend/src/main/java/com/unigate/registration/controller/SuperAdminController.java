@@ -39,8 +39,6 @@ public class SuperAdminController {
     private final SwapRatingRepository        swapRatingRepository;
     private final PasswordEncoder             passwordEncoder;
 
-    // ── Admin Users ───────────────────────────────────────────────────────────
-
     @GetMapping("/admins")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<AdminUserDTO>> getAdmins() {
@@ -69,7 +67,6 @@ public class SuperAdminController {
         return ResponseEntity.ok(toAdminDTO(userRepository.save(admin)));
     }
 
-    // ── Department Stats ──────────────────────────────────────────────────────
 
     @GetMapping("/departments")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -115,7 +112,6 @@ public class SuperAdminController {
         return ResponseEntity.ok(result);
     }
 
-    // ── Skill Swap Stats ──────────────────────────────────────────────────────
 
     @GetMapping("/skillswap-stats")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -134,7 +130,6 @@ public class SuperAdminController {
             .build());
     }
 
-    // ── Registration Periods ──────────────────────────────────────────────────
 
     @GetMapping("/registration-periods")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -172,7 +167,6 @@ public class SuperAdminController {
             applicationRepository.findAll()));
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private AdminUserDTO toAdminDTO(User u) {
         List<Application> reviewed  = applicationRepository.findByReviewerId(u.getId());

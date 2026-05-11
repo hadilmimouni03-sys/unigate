@@ -35,7 +35,7 @@ public class SkillOffer {
     private Set<Skill> skillsWanted = new HashSet<>();
 
     @Column(columnDefinition = "TEXT") private String description;
-    private String availability; // e.g. "Mon/Wed 14:00-16:00"
+    private String availability; 
     private boolean active;
 
     @Column(updatable = false) private LocalDateTime createdAt;

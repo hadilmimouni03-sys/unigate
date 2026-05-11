@@ -40,7 +40,6 @@ const SuperAdminLayout = () => {
 
       <aside className={`flex flex-col bg-white border-r border-slate-200 transition-all duration-300 flex-shrink-0 ${collapsed ? 'w-16' : 'w-60'}`}>
 
-        {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-slate-200 gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shrink-0 text-white">
             <ShieldIcon />
@@ -58,7 +57,6 @@ const SuperAdminLayout = () => {
           </button>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 py-3 space-y-0.5 px-2 overflow-y-auto">
           {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -90,7 +88,6 @@ const SuperAdminLayout = () => {
           ))}
         </nav>
 
-        {/* Bottom */}
         <div className="border-t border-slate-200 p-2 space-y-1">
           {!collapsed && user && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-100">
@@ -114,7 +111,6 @@ const SuperAdminLayout = () => {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
           <div className="flex-1 max-w-md">

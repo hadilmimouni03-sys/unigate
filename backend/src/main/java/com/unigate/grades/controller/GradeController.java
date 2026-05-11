@@ -20,14 +20,12 @@ public class GradeController {
 
     private final GradeService gradeService;
 
-    /** Admin enters official grade for a specific student */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<GradeDTO> enterGrade(@Valid @RequestBody GradeEntryRequest request) {
         return ResponseEntity.ok(gradeService.enterGrade(request));
     }
 
-    /** Student enters their own CC/Exam/TP grades */
     @PostMapping("/my")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<GradeDTO> enterMyGrade(
@@ -36,14 +34,12 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.enterMyGrade(user.getId(), request));
     }
 
-    /** Student fetches their own grades */
     @GetMapping("/my")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<GradeDTO>> myGrades(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(gradeService.getGradesForStudent(user.getId()));
     }
 
-    /** Admin fetches grades for a specific student */
     @GetMapping("/student/{studentId}")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<List<GradeDTO>> studentGrades(
@@ -55,7 +51,6 @@ public class GradeController {
         return ResponseEntity.ok(grades);
     }
 
-    /** Admin fetches module configs for their department */
     @GetMapping("/config")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<List<GradeConfigDTO>> getConfig(
@@ -67,7 +62,6 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.getConfigs(dept, semester));
     }
 
-    /** Admin saves (upsert) module configs for their department */
     @PutMapping("/config")
     @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     public ResponseEntity<List<GradeConfigDTO>> saveConfig(
@@ -79,7 +73,6 @@ public class GradeController {
         return ResponseEntity.ok(gradeService.saveConfigs(dtos, dept));
     }
 
-    /** Student fetches all module configs for their department (to display empty rows before entering grades) */
     @GetMapping("/subjects")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<GradeConfigDTO>> getMySubjects(

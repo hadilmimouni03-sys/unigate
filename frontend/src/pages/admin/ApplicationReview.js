@@ -122,7 +122,6 @@ const ApplicationReview = ({ applicationId, onBack }) => {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-5">
 
-      {/* Back */}
       <button
         onClick={onBack}
         className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-800 transition group"
@@ -133,7 +132,6 @@ const ApplicationReview = ({ applicationId, onBack }) => {
         Back to Applications
       </button>
 
-      {/* Title row */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Application #{app?.id}</h1>
@@ -145,13 +143,10 @@ const ApplicationReview = ({ applicationId, onBack }) => {
         </span>
       </div>
 
-      {/* 5-col split */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-        {/* LEFT col-span-2 */}
         <div className="lg:col-span-2 space-y-4">
 
-          {/* Student info */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
@@ -169,7 +164,6 @@ const ApplicationReview = ({ applicationId, onBack }) => {
             </div>
           </div>
 
-          {/* Documents */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-800">Documents</h3>
@@ -239,10 +233,8 @@ const ApplicationReview = ({ applicationId, onBack }) => {
           </div>
         </div>
 
-        {/* RIGHT col-span-3 */}
         <div className="lg:col-span-3 space-y-4">
 
-          {/* Eligibility check */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-slate-800 mb-4">Eligibility Check</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -267,7 +259,6 @@ const ApplicationReview = ({ applicationId, onBack }) => {
             </div>
           </div>
 
-          {/* Review actions */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-slate-800 mb-4">Review Decision</h3>
 
@@ -299,7 +290,6 @@ const ApplicationReview = ({ applicationId, onBack }) => {
                   </div>
                 )}
 
-                {/* Class Group Assignment — required before approving */}
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
                     Class Group Assignment

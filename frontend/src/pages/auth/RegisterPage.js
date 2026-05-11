@@ -94,7 +94,6 @@ const RegisterPage = () => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
 
-        {/* Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
             <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
@@ -106,7 +105,6 @@ const RegisterPage = () => {
           <p className="text-slate-500 text-sm mt-1">Student registration — takes about 2 minutes</p>
         </div>
 
-        {/* Step indicator */}
         <div className="flex items-center justify-center mb-8">
           {STEP_LABELS.map((label, i) => {
             const s = i + 1;
@@ -150,7 +148,7 @@ const RegisterPage = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Step 1: Personal Info */}
+
             {step === 1 && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -183,7 +181,6 @@ const RegisterPage = () => {
               </div>
             )}
 
-            {/* Step 2: Registration Type */}
             {step === 2 && (
               <div className="space-y-4">
                 <Field label="Program Type">
@@ -242,7 +239,6 @@ const RegisterPage = () => {
               </div>
             )}
 
-            {/* Step 3: Confirmation */}
             {step === 3 && (
               <div className="space-y-4">
                 <p className="text-sm font-semibold text-slate-700 mb-3">Review your information</p>

@@ -28,7 +28,6 @@ public class GradeService {
     private final StudentRepository      studentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    // ── Admin: enter official grade for a student ──────────────────────────
     @Transactional
     public GradeDTO enterGrade(GradeEntryRequest request) {
         GradeConfig config = configRepository.findByModuleCode(request.getModuleCode())
@@ -54,7 +53,6 @@ public class GradeService {
         return toDTO(grade);
     }
 
-    // ── Student: self-enter saved grades ──────────────────────────────────
     @Transactional
     public GradeDTO enterMyGrade(Long studentId, StudentGradeEntryRequest request) {
         GradeConfig config = configRepository.findByModuleCode(request.getModuleCode())
@@ -80,7 +78,6 @@ public class GradeService {
         return toDTO(gradeRepository.save(grade));
     }
 
-    // ── Student: fetch own grades ─────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<GradeDTO> getGradesForStudent(Long studentId) {
         return gradeRepository.findByStudentId(studentId).stream()
@@ -93,7 +90,6 @@ public class GradeService {
                 .stream().map(this::toDTO).collect(Collectors.toList());
     }
 
-    // ── Config management (admin) ─────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<GradeConfigDTO> getConfigs(String department, Integer semester) {
         List<GradeConfig> configs = (semester != null)
@@ -119,12 +115,7 @@ public class GradeService {
         }).collect(Collectors.toList());
     }
 
-    // ── Simulation (pure calculation, no persistence) ─────────────────────
-    /**
-     * Computes the full Subject → Module → Semester hierarchy from the supplied
-     * hypothetical marks. All weights/coefficients come from GradeConfig (DB).
-     * Nothing is saved.
-     */
+
     public SimulationResult simulateFull(SimulationRequest request) {
         if (request.getGrades() == null || request.getGrades().isEmpty()) {
             return SimulationResult.builder()
@@ -139,7 +130,6 @@ public class GradeService {
         Map<String, GradeConfig> configMap = configRepository.findByModuleCodeIn(codes).stream()
                 .collect(Collectors.toMap(GradeConfig::getModuleCode, c -> c));
 
-        // ── 1. Subject results ────────────────────────────────────────────
         List<SimulationResult.SubjectResult> subjects = new ArrayList<>();
         for (SimulationRequest.SubjectMarkInput input : request.getGrades()) {
             GradeConfig c = configMap.get(input.getModuleCode());
@@ -176,7 +166,6 @@ public class GradeService {
                     .build());
         }
 
-        // ── 2. Group: semester → module ───────────────────────────────────
         Map<Integer, List<SimulationResult.SubjectResult>> bySemester = subjects.stream()
                 .collect(Collectors.groupingBy(SimulationResult.SubjectResult::getSemester));
 
@@ -260,7 +249,6 @@ public class GradeService {
                 .build();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────
     private void applyComputed(StudentGrade grade, GradeConfig config) {
         Double cc   = grade.getCcMark();
         Double exam = grade.getExamMark();
@@ -278,7 +266,6 @@ public class GradeService {
         grade.setRequiredExamToPass(computeRequiredExam(config, cc, tp));
     }
 
-    /** Returns "IMPOSSIBLE", "ALREADY_VALIDATED", or "X.XX". */
     private String computeRequiredExam(GradeConfig config, double ccMark, Double tpMark) {
         double tpPart = (config.getTpWeight() > 0 && tpMark != null) ? config.getTpWeight() * tpMark : 0.0;
         double required = (PASSING_MARK - config.getCcWeight() * ccMark - tpPart) / config.getExamWeight();

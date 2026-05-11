@@ -101,7 +101,6 @@ public class ApplicationService {
         app.setDecidedAt(LocalDateTime.now());
         app = applicationRepository.save(app);
 
-        // Assign student to a ClassGroup on approval
         if (newStatus == ApplicationStatus.APPROVED) {
             if (request.getClassGroupId() != null) {
                 assignClassGroup(app.getStudent(), request.getClassGroupId());

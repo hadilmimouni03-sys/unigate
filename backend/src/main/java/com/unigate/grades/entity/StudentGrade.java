@@ -30,7 +30,6 @@ public class StudentGrade {
     private Boolean passed;
     private String requiredExamToPass;
 
-    /** True when an admin entered this grade — students cannot overwrite admin-entered grades. */
     @Builder.Default private boolean adminEntered = false;
 
     @Column(updatable = false)

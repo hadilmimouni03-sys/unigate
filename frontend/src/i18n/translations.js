@@ -1,6 +1,5 @@
 export const translations = {
   en: {
-    // Navigation
     nav: {
       dashboard: 'Dashboard',
       timetable: 'Timetable',
@@ -10,7 +9,6 @@ export const translations = {
       notifications: 'Notifications',
       logout: 'Logout',
     },
-    // Auth
     auth: {
       welcomeBack: 'Welcome Back',
       signIn: 'Sign In',
@@ -40,7 +38,6 @@ export const translations = {
       next: 'Next',
       submit: 'Submit',
     },
-    // Student Dashboard
     student: {
       hello: 'Hello',
       myApplication: 'Application',
@@ -66,7 +63,6 @@ export const translations = {
       allDocsValid: 'All documents validated!',
       docsRemaining: 'documents remaining',
     },
-    // Status labels
     status: {
       DRAFT: 'Draft',
       SUBMITTED: 'Submitted',
@@ -75,7 +71,6 @@ export const translations = {
       APPROVED: 'Approved',
       REFUSED: 'Refused',
     },
-    // Admin
     admin: {
       dashboard: 'Applications Dashboard',
       manage: 'Manage and review student registration applications',
@@ -91,7 +86,6 @@ export const translations = {
       docs: 'Docs',
       review: 'Review',
     },
-    // Grades
     grades: {
       title: 'Academic Grades',
       subtitle: 'Your grades and performance overview',
@@ -113,7 +107,6 @@ export const translations = {
       examNeeded: 'Exam needed to pass',
       impossible: 'IMPOSSIBLE',
     },
-    // Internships
     internships: {
       title: 'Internships',
       subtitle: 'Discover and apply for internship opportunities',
@@ -128,7 +121,6 @@ export const translations = {
       shortlisted: 'Shortlisted',
       accepted: 'Accepted',
     },
-    // Peer Learning
     skillswap: {
       title: 'Peer Learning',
       subtitle: 'Connect with fellow students to share and learn skills',
@@ -146,7 +138,6 @@ export const translations = {
       accept: 'Accept',
       reject: 'Decline',
     },
-    // Notifications
     notifications: {
       title: 'Notifications',
       markAllRead: 'Mark all read',

@@ -15,7 +15,6 @@ public class ScheduledTasks {
 
     private final ApplicationRepository applicationRepository;
 
-    /** Warn every hour about applications under review for more than 48 h */
     @Scheduled(fixedRate = 3_600_000)
     public void detectSlaBreaches() {
         LocalDateTime cutoff = LocalDateTime.now().minusHours(48);

@@ -115,7 +115,6 @@ const TimetablePage = () => {
   const [formSaving, setFormSaving] = useState(false);
   const [formError,  setFormError]  = useState('');
 
-  // Admin: load group list for the dropdown
   useEffect(() => {
     if (isStudent) return;
     timetableApi.getGroups()
@@ -126,7 +125,6 @@ const TimetablePage = () => {
       .catch(() => {});
   }, [isStudent]);
 
-  // Student: auto-load their assigned group's timetable
   useEffect(() => {
     if (!isStudent) return;
     setLoading(true);
@@ -195,7 +193,6 @@ const TimetablePage = () => {
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Timetable</h1>
@@ -214,7 +211,6 @@ const TimetablePage = () => {
         )}
       </div>
 
-      {/* Group selector — admin/staff only */}
       {!isStudent && (
         <div className="max-w-sm">
           <label className="block text-sm font-medium text-slate-700 mb-1.5">Select Class Group</label>
@@ -248,7 +244,6 @@ const TimetablePage = () => {
         </div>
       )}
 
-      {/* Student loading indicator */}
       {isStudent && loading && (
         <p className="text-xs text-slate-400 flex items-center gap-1.5">
           <span className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin inline-block"/>
@@ -267,7 +262,6 @@ const TimetablePage = () => {
 
       {slots.length > 0 && (
         <>
-          {/* Stats + admin actions */}
           <div className="flex flex-wrap items-center gap-3">
             {[
               { label: 'Sessions / week', value: slots.length },
@@ -291,7 +285,6 @@ const TimetablePage = () => {
             )}
           </div>
 
-          {/* Legend */}
           <div className="flex flex-wrap gap-4">
             {Object.entries(SLOT_STYLE).map(([type, cfg]) => (
               <div key={type} className="flex items-center gap-1.5">
@@ -301,7 +294,6 @@ const TimetablePage = () => {
             ))}
           </div>
 
-          {/* Weekly grid */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="grid border-b border-slate-100" style={{ gridTemplateColumns: '72px repeat(6, 1fr)' }}>
               <div className="bg-slate-50 border-r border-slate-100" />
@@ -360,7 +352,6 @@ const TimetablePage = () => {
             ))}
           </div>
 
-          {/* Course list */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-sm font-semibold text-slate-800 mb-4">Courses This Week</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -382,7 +373,6 @@ const TimetablePage = () => {
         </>
       )}
 
-      {/* Student placeholder — no group assigned or no slots yet */}
       {isStudent && !loading && !error && slots.length === 0 && (
         <div className="text-center py-20 bg-white rounded-2xl border border-slate-200">
           <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -395,7 +385,6 @@ const TimetablePage = () => {
         </div>
       )}
 
-      {/* Admin — group selected but no slots yet */}
       {!isStudent && !loading && !error && slots.length === 0 && groupId && (
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
           <p className="text-slate-500 font-medium">No slots configured for this group yet.</p>
@@ -403,7 +392,6 @@ const TimetablePage = () => {
         </div>
       )}
 
-      {/* Admin — no group selected yet */}
       {!isStudent && !loading && !error && !groupId && (
         <div className="text-center py-20 bg-white rounded-2xl border border-slate-200">
           <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -416,7 +404,6 @@ const TimetablePage = () => {
         </div>
       )}
 
-      {/* Add Slot Modal */}
       {isAdmin && showForm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">

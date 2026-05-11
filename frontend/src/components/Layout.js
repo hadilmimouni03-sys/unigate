@@ -21,7 +21,6 @@ const Layout = ({ children }) => {
       <Sidebar unread={unread} />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
           <div className="flex-1 max-w-md">
             <div className="relative">
@@ -58,7 +57,6 @@ const Layout = ({ children }) => {
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>

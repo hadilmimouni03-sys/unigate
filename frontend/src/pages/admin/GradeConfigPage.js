@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 
 const uid = () => Math.random().toString(36).slice(2);
 
-// ── Small shared components ───────────────────────────────────────────────
 
 const Toggle = ({ on, onToggle }) => (
   <button
@@ -48,7 +47,6 @@ const TableInput = ({ type = 'text', value, onChange, disabled, placeholder, min
   />
 );
 
-// ── Stats bar ─────────────────────────────────────────────────────────────
 const StatsBar = ({ courses }) => {
   const valid     = courses.filter(c => Math.abs(c.ccWeight + c.examWeight + (c.hasTP ? c.tpWeight : 0) - 100) < 0.1 && c.moduleCode && c.moduleName);
   const totalCred = courses.reduce((a, c) => a + (c.credits || 0), 0);
@@ -73,7 +71,6 @@ const StatsBar = ({ courses }) => {
   );
 };
 
-// ── GradeConfigPage ───────────────────────────────────────────────────────
 const GradeConfigPage = () => {
   const { user } = useAuth();
   const [courses,   setCourses]   = useState([]);
@@ -168,7 +165,6 @@ const GradeConfigPage = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
 
-      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Configuration des notes</h1>
@@ -177,7 +173,6 @@ const GradeConfigPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {/* Semester filter */}
           <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
             {['all', '1', '2'].map(s => (
               <button
@@ -220,7 +215,6 @@ const GradeConfigPage = () => {
         </div>
       </div>
 
-      {/* Toast */}
       {feedback && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border ${
           feedback.type === 'error'
@@ -231,10 +225,8 @@ const GradeConfigPage = () => {
         </div>
       )}
 
-      {/* Stats */}
       {!loading && <StatsBar courses={courses} />}
 
-      {/* Table */}
       {loading ? (
         <Spinner />
       ) : (
@@ -407,7 +399,6 @@ const GradeConfigPage = () => {
         </div>
       )}
 
-      {/* Help section */}
       <div className="grid sm:grid-cols-3 gap-3">
         {[
           {

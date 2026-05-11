@@ -51,7 +51,6 @@ const Sidebar = ({ unread = 0 }) => {
   return (
     <aside className={`flex flex-col bg-white border-r border-slate-200 transition-all duration-300 flex-shrink-0 ${collapsed ? 'w-16' : 'w-60'}`}>
 
-      {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200">
         {!collapsed && (
           <div className="flex items-center gap-2.5">
@@ -71,7 +70,6 @@ const Sidebar = ({ unread = 0 }) => {
         </button>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 py-3 space-y-0.5 px-2 overflow-y-auto">
         {navItems.map(({ to, label, icon: Icon, badge }) => (
           <NavLink
@@ -108,10 +106,8 @@ const Sidebar = ({ unread = 0 }) => {
         ))}
       </nav>
 
-      {/* Bottom */}
       <div className="border-t border-slate-200 p-2 space-y-1">
 
-        {/* Language picker */}
         <div className="relative">
           <button
             onClick={() => setShowLang(!showLang)}
@@ -148,7 +144,6 @@ const Sidebar = ({ unread = 0 }) => {
           )}
         </div>
 
-        {/* User info */}
         {!collapsed && user && (
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-slate-50 border border-slate-200">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs shrink-0">
@@ -161,7 +156,6 @@ const Sidebar = ({ unread = 0 }) => {
           </div>
         )}
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition"

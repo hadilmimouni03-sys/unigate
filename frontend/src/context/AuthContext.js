@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }) => {
     try {
       await authApi.logout();
     } catch {
-      // Ignore network/auth errors — we still clear local state below.
     }
     localStorage.clear();
     setUser(null);

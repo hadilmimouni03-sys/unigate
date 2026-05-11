@@ -10,7 +10,6 @@ const STATUS_COLORS = {
   CANCELLED: 'bg-slate-100 text-slate-500',
 };
 
-/* ── SVG circular match-score (score is 0-1 decimal) ── */
 const MatchCircle = ({ score }) => {
   const pct = Math.round((score || 0) * 100);
   const r = 28;
@@ -178,10 +177,8 @@ const SkillSwapPage = () => {
   const filteredOffers  = filterItems(offers);
   const filteredMatches = filterItems(matches);
 
-  /* ── Match card (shared between matches + marketplace) ── */
   const MatchCard = ({ o, isMatch }) => (
     <div className="bg-white rounded-2xl border-2 border-slate-100 hover:border-blue-200 hover:shadow-xl transition-all p-6">
-      {/* Top row: avatar + info + match circle */}
       <div className="flex items-start justify-between mb-4 gap-3">
         <div className="flex items-start gap-4 min-w-0">
           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-base shrink-0">
@@ -211,11 +208,9 @@ const SkillSwapPage = () => {
           </div>
         </div>
 
-        {/* Match score */}
         {o.matchScore != null && <MatchCircle score={isMatch ? o.matchScore : o.matchScore / 100} />}
       </div>
 
-      {/* Skills */}
       <div className="space-y-3 mb-4">
         {o.skillsOffered?.length > 0 && (
           <div>
@@ -235,7 +230,6 @@ const SkillSwapPage = () => {
         )}
       </div>
 
-      {/* Shared time slots */}
       {o.sharedSlots?.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
           <div className="flex items-center gap-2 text-sm text-blue-900 mb-1.5 font-medium">
@@ -250,7 +244,6 @@ const SkillSwapPage = () => {
         </div>
       )}
 
-      {/* Request form inline */}
       {requestingId === o.id ? (
         <div className="space-y-2">
           <input
@@ -285,7 +278,6 @@ const SkillSwapPage = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
 
-      {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Skill Swap</h1>
@@ -302,7 +294,6 @@ const SkillSwapPage = () => {
         </button>
       </div>
 
-      {/* ── Feedback toast ── */}
       {feedback.msg && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
           feedback.type === 'error' ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-green-50 border border-green-200 text-green-700'
@@ -316,7 +307,6 @@ const SkillSwapPage = () => {
         </div>
       )}
 
-      {/* ── My Profile Card ── */}
       {!editingProfile ? (
         <div className="rounded-2xl border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-purple-50 p-6">
           <div className="flex items-start gap-6">
@@ -422,7 +412,6 @@ const SkillSwapPage = () => {
         </div>
       )}
 
-      {/* ── Search ── */}
       <div className="relative">
         <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -435,7 +424,6 @@ const SkillSwapPage = () => {
         />
       </div>
 
-      {/* ── Tabs ── */}
       <div className="flex border-b border-slate-200 gap-1">
         {TABS.map(({ key, label }) => (
           <button
@@ -450,7 +438,6 @@ const SkillSwapPage = () => {
         ))}
       </div>
 
-      {/* ── TOP MATCHES ── */}
       {tab === 'matches' && (
         <>
           <div className="flex items-center justify-between">
@@ -472,7 +459,6 @@ const SkillSwapPage = () => {
         </>
       )}
 
-      {/* ── MARKETPLACE ── */}
       {tab === 'marketplace' && (
         <>
           <div className="flex items-center justify-between">
@@ -494,7 +480,6 @@ const SkillSwapPage = () => {
         </>
       )}
 
-      {/* ── MY SESSIONS ── */}
       {tab === 'my-swaps' && (
         <>
           <h2 className="text-xl font-bold text-slate-900">My Sessions</h2>

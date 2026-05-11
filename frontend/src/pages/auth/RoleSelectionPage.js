@@ -79,19 +79,16 @@ const RoleSelectionPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-900 via-purple-900 to-indigo-900 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"/>
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"/>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-violet-500/10 rounded-full blur-3xl"/>
       </div>
 
-      {/* Language switcher */}
       <div className="absolute top-6 right-6 z-10">
         <LanguageSwitcher />
       </div>
 
-      {/* Logo */}
       <div className="mb-8 text-center relative z-10">
         <div className="w-16 h-16 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
           <span className="text-white font-bold text-2xl">UG</span>
@@ -100,13 +97,11 @@ const RoleSelectionPage = () => {
         <p className="text-white/60 text-sm mt-1">Smart University Registration Portal</p>
       </div>
 
-      {/* Title */}
       <div className="text-center mb-8 relative z-10">
         <h2 className="text-xl font-semibold text-white">{t('auth.chooseRole')}</h2>
         <p className="text-white/60 text-sm mt-1">{t('auth.chooseRoleDesc')}</p>
       </div>
 
-      {/* Role cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-3xl relative z-10">
         {ROLES.map((role) => (
           <button
@@ -116,7 +111,6 @@ const RoleSelectionPage = () => {
             onMouseLeave={() => setHovered(null)}
             className={`group relative bg-white/10 backdrop-blur-sm border ${role.border} rounded-2xl p-6 text-left transition-all duration-300 hover:bg-white/20 hover:shadow-2xl hover:-translate-y-1 border-white/20`}
           >
-            {/* Icon */}
             <div className={`w-14 h-14 ${role.iconBg} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
               {role.icon}
             </div>
@@ -124,7 +118,6 @@ const RoleSelectionPage = () => {
             <h3 className="text-white font-bold text-lg mb-1">{t(role.tKey)}</h3>
             <p className="text-white/60 text-sm leading-relaxed">{t(role.descKey)}</p>
 
-            {/* Arrow */}
             <div className="mt-4 flex items-center text-white/60 text-xs font-medium group-hover:text-white transition-colors">
               {t('auth.signIn')}
               <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -132,7 +125,6 @@ const RoleSelectionPage = () => {
               </svg>
             </div>
 
-            {/* Gradient bottom border */}
             <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${role.gradient} rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity`}/>
           </button>
         ))}

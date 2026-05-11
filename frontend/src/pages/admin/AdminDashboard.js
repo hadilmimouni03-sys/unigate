@@ -90,7 +90,6 @@ const AdminDashboard = () => {
   return (
     <div className="p-6 space-y-6">
 
-      {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-purple-700 via-purple-800 to-purple-900 rounded-2xl p-7 text-white">
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
@@ -109,7 +108,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {METRIC_CARDS.map(({ key, label, accent, iconBg, iconColor, icon }) => (
           <div key={key} className={`bg-white rounded-xl border border-slate-200 border-l-4 ${accent} p-5 shadow-sm`}>
@@ -129,7 +127,6 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Weekly activity chart */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -170,7 +167,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="relative flex-1 max-w-xs">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -202,7 +198,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Applications table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-20">

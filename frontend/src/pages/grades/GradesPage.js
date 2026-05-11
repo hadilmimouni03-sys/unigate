@@ -4,7 +4,6 @@ import { gradeApi } from '../../services/api';
 const PASS = 10;
 const r2 = (v) => Math.round(v * 100) / 100;
 
-// ── Calculation helpers (mirror backend logic) ────────────────────────────
 const calcAvg = (cfg, cc, exam, tp) => {
   const c = parseFloat(cc), e = parseFloat(exam);
   if (isNaN(c) || isNaN(e)) return null;
@@ -29,7 +28,6 @@ const calcModuleAvg = (subs) => {
   return total ? r2(subs.reduce((a, s) => a + s.avg * s.w, 0) / total) : null;
 };
 
-// ── Build semester → module → subject hierarchy ───────────────────────────
 function buildHierarchy(configs, gradesMap, localMarks) {
   const bySem = {};
   for (const cfg of configs) {
@@ -73,7 +71,6 @@ function buildHierarchy(configs, gradesMap, localMarks) {
     });
 }
 
-// ── WeightBar ─────────────────────────────────────────────────────────────
 const WeightBar = ({ cfg }) => (
   <div className="space-y-1.5">
     <div className="flex h-1.5 rounded-full overflow-hidden gap-px">
@@ -102,7 +99,6 @@ const Dot = ({ color, label }) => (
   </div>
 );
 
-// ── AvgBadge ──────────────────────────────────────────────────────────────
 const AvgBadge = ({ avg, size = 'sm' }) => {
   if (avg === null)
     return <span className={`font-mono text-slate-400 ${size === 'lg' ? 'text-base' : 'text-sm'}`}>—/20</span>;
@@ -123,7 +119,6 @@ const AvgBadge = ({ avg, size = 'sm' }) => {
   );
 };
 
-// ── MarkInput ─────────────────────────────────────────────────────────────
 const MarkInput = ({ label, value, onChange, disabled, accent }) => {
   const ringClasses = {
     blue:    'focus:ring-blue-400 focus:border-blue-300',
@@ -156,7 +151,6 @@ const MarkInput = ({ label, value, onChange, disabled, accent }) => {
   );
 };
 
-// ── StatusHint ────────────────────────────────────────────────────────────
 const StatusHint = ({ reqExam, avg, hasTp }) => {
   const passed = avg !== null && avg >= PASS;
 
@@ -204,7 +198,6 @@ const StatusHint = ({ reqExam, avg, hasTp }) => {
   return null;
 };
 
-// ── SubjectCard ───────────────────────────────────────────────────────────
 const SubjectCard = ({ sub, onMarkChange, onSave, saving }) => {
   const { cfg, grade, cc, exam, tp, avg, reqExam } = sub;
   const isOfficial = Boolean(grade?.adminEntered);
@@ -222,11 +215,9 @@ const SubjectCard = ({ sub, onMarkChange, onSave, saving }) => {
 
   return (
     <div className={`flex rounded-xl border bg-white shadow-sm overflow-hidden transition-colors duration-300 ${borderColor}`}>
-      {/* Vertical accent strip */}
       <div className={`w-1.5 shrink-0 transition-all duration-300 ${accentBar}`} />
 
       <div className="flex-1 p-4 space-y-3 min-w-0">
-        {/* Subject header */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -244,10 +235,8 @@ const SubjectCard = ({ sub, onMarkChange, onSave, saving }) => {
           </div>
         </div>
 
-        {/* Weight visualization */}
         <WeightBar cfg={cfg} />
 
-        {/* Mark inputs */}
         <div className="space-y-2">
           <MarkInput label="CC"   value={cc}   onChange={v => onMarkChange(cfg.moduleCode, 'cc', v)}   disabled={isOfficial} accent="blue" />
           <MarkInput label="Exam" value={exam} onChange={v => onMarkChange(cfg.moduleCode, 'exam', v)} disabled={isOfficial} accent="violet" />
@@ -256,10 +245,8 @@ const SubjectCard = ({ sub, onMarkChange, onSave, saving }) => {
           )}
         </div>
 
-        {/* Status message */}
         <StatusHint reqExam={reqExam} avg={avg} hasTp={hasTp} />
 
-        {/* Footer */}
         {!isOfficial ? (
           <button
             onClick={() =>
@@ -283,7 +270,6 @@ const SubjectCard = ({ sub, onMarkChange, onSave, saving }) => {
   );
 };
 
-// ── SummaryBar ────────────────────────────────────────────────────────────
 const SummaryBar = ({ hierarchy }) => {
   const allMods  = hierarchy.flatMap(h => h.modules);
   const earned   = allMods.filter(m => m.passed).reduce((a, m) => a + m.credits, 0);
@@ -360,7 +346,6 @@ const SummaryBar = ({ hierarchy }) => {
   );
 };
 
-// ── Main page ─────────────────────────────────────────────────────────────
 const GradesPage = () => {
   const [configs,    setConfigs]    = useState([]);
   const [gradesMap,  setGradesMap]  = useState({});
@@ -382,7 +367,6 @@ const GradesPage = () => {
       for (const g of gds) map[g.moduleCode] = g;
       setGradesMap(map);
     } catch {
-      // silent — empty state shown below
     } finally {
       setLoading(false);
     }
@@ -429,7 +413,6 @@ const GradesPage = () => {
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
 
-      {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Mes Notes</h1>
@@ -458,7 +441,6 @@ const GradesPage = () => {
         )}
       </div>
 
-      {/* Toast */}
       {feedback && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border transition ${
           feedback.type === 'error'
@@ -469,10 +451,8 @@ const GradesPage = () => {
         </div>
       )}
 
-      {/* Summary dashboard */}
       {!loading && configs.length > 0 && <SummaryBar hierarchy={allHierarchy} />}
 
-      {/* Content */}
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
@@ -493,7 +473,6 @@ const GradesPage = () => {
         <div className="space-y-8">
           {hierarchy.map(({ sem, modules, semAvg, earned, total }) => (
             <section key={sem}>
-              {/* Semester header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-bold text-slate-800">Semestre {sem}</h2>
@@ -507,11 +486,9 @@ const GradesPage = () => {
                 </div>
               </div>
 
-              {/* Module groups */}
               <div className="space-y-4">
                 {modules.map(({ modName, subjects, avg: modAvg, credits: modCred, passed: modPassed }) => (
                   <div key={modName} className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden">
-                    {/* Module header */}
                     <div className={`flex items-center justify-between px-5 py-3.5 border-b transition-colors duration-300 ${
                       modAvg === null
                         ? 'border-slate-200 bg-white'
@@ -531,7 +508,6 @@ const GradesPage = () => {
                       </div>
                     </div>
 
-                    {/* Subject cards */}
                     <div className={`p-4 ${subjects.length > 1 ? 'grid grid-cols-1 sm:grid-cols-2 gap-3' : ''}`}>
                       {subjects.map(sub => (
                         <SubjectCard
@@ -551,7 +527,6 @@ const GradesPage = () => {
         </div>
       )}
 
-      {/* Legend */}
       {!loading && hierarchy.length > 0 && (
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-3 border-t border-slate-100 text-xs text-slate-400">
           <Dot color="bg-blue-400"    label="CC" />

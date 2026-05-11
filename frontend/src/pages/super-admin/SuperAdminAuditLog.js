@@ -52,7 +52,6 @@ const SuperAdminAuditLog = () => {
   return (
     <div className="p-6 space-y-6">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Audit Log</h1>
@@ -74,10 +73,8 @@ const SuperAdminAuditLog = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-white rounded-xl border-2 border-red-100 shadow-sm p-4">
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          {/* Search */}
           <div className="relative flex-1">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
@@ -91,7 +88,6 @@ const SuperAdminAuditLog = () => {
             />
           </div>
 
-          {/* Type filter */}
           <select
             className="h-10 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition text-slate-700"
             value={typeFilter}
@@ -103,7 +99,6 @@ const SuperAdminAuditLog = () => {
             ))}
           </select>
 
-          {/* Date range */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500 whitespace-nowrap">From:</span>
             <input
@@ -123,7 +118,6 @@ const SuperAdminAuditLog = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -172,7 +166,6 @@ const SuperAdminAuditLog = () => {
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="flex items-center justify-between px-5 py-3.5 border-t border-slate-100">
           <p className="text-xs text-slate-500">
             Showing {filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE + PAGE_SIZE, filtered.length)} of {filtered.length} entries

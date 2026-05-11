@@ -167,7 +167,6 @@ public class InternshipService {
                 .stream().map(this::toAppDTO).collect(Collectors.toList());
     }
 
-    /** Daily at midnight — expire offers past their deadline */
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void expireDeadlinedOffers() {

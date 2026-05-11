@@ -22,6 +22,5 @@ public class GradeConfig {
     private int credits;
     private int semester;
 
-    /** Name of the module this subject belongs to. Null ⟹ subject IS its own module. */
     private String parentModuleName;
 }

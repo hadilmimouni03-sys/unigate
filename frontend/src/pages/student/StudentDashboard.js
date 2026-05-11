@@ -156,7 +156,6 @@ const StudentDashboard = () => {
   return (
     <div className="p-6 space-y-6">
 
-      {/* Live update toast */}
       {liveMsg && (
         <div className="flex items-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium">
           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -167,7 +166,6 @@ const StudentDashboard = () => {
         </div>
       )}
 
-      {/* Welcome Banner */}
       <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-8 text-white">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
@@ -196,7 +194,6 @@ const StudentDashboard = () => {
             )}
           </div>
 
-          {/* Document progress circle */}
           <div className="text-center shrink-0">
             <div className="relative inline-flex items-center justify-center">
               <svg className="w-28 h-28 -rotate-90">
@@ -220,7 +217,6 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      {/* Status Alerts */}
       {application?.status === 'INCOMPLETE' && (
         <div className="flex items-start gap-3 bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
           <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
@@ -268,7 +264,6 @@ const StudentDashboard = () => {
         </div>
       )}
 
-      {/* Application Journey (Phase Stepper) */}
       {application && application.status !== 'REFUSED' && (
         <div className="bg-white rounded-2xl border-2 border-blue-100 shadow-lg p-8">
           <div className="text-center mb-8">
@@ -277,7 +272,6 @@ const StudentDashboard = () => {
           </div>
 
           <div className="relative">
-            {/* Connection line */}
             <div className="absolute top-[72px] left-[14%] right-[14%] h-1 bg-slate-200 rounded-full">
               <div
                 className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-1000"
@@ -285,7 +279,6 @@ const StudentDashboard = () => {
               />
             </div>
 
-            {/* Phase cards */}
             <div className="relative grid grid-cols-4 gap-4">
               {STEPS.map((step, i) => {
                 const isCompleted = i < effectiveStep;
@@ -299,7 +292,6 @@ const StudentDashboard = () => {
                       isActive ? 'bg-blue-50 border-2 border-blue-500 shadow-xl shadow-blue-200 ring-4 ring-blue-100 scale-105' :
                       'bg-slate-50 border-2 border-slate-200 opacity-50'
                     }`}>
-                      {/* Status badge */}
                       <div className={`absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center ${
                         isCompleted ? 'bg-green-500' : isActive ? 'bg-blue-500' : 'bg-slate-300'
                       }`}>
@@ -314,14 +306,12 @@ const StudentDashboard = () => {
                         )}
                       </div>
 
-                      {/* Phase icon */}
                       <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-2 ${
                         isCompleted ? 'bg-green-500' : isActive ? 'bg-blue-500' : 'bg-slate-300'
                       }`}>
                         {STEP_ICONS[step]}
                       </div>
 
-                      {/* Phase name */}
                       <div className={`text-center font-bold text-sm leading-tight ${
                         isCompleted ? 'text-green-700' : isActive ? 'text-blue-700' : 'text-slate-400'
                       }`}>
@@ -329,7 +319,6 @@ const StudentDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Status label below card */}
                     <div className="mt-3">
                       {isCompleted && (
                         <span className="text-xs bg-green-500 text-white px-2.5 py-1 rounded-full font-medium">Complete</span>
@@ -351,7 +340,6 @@ const StudentDashboard = () => {
         </div>
       )}
 
-      {/* Metrics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
@@ -412,9 +400,7 @@ const StudentDashboard = () => {
         </div>
       </div>
 
-      {/* Tabs Card */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Tab bar */}
         <div className="flex border-b border-slate-200 px-2">
           {[
             ['overview',  'Overview'],
@@ -437,7 +423,6 @@ const StudentDashboard = () => {
         </div>
 
         <div className="p-6">
-          {/* Overview tab */}
           {activeTab === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
@@ -504,7 +489,6 @@ const StudentDashboard = () => {
                 </div>
               </div>
 
-              {/* Eligibility Requirements — always visible in Overview */}
               <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl p-5">
                 <div className="flex items-start gap-2 mb-3">
                   <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -545,7 +529,6 @@ const StudentDashboard = () => {
             </div>
           )}
 
-          {/* Documents tab */}
           {activeTab === 'documents' && (
             <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -620,7 +603,6 @@ const StudentDashboard = () => {
             </div>
           )}
 
-          {/* Timeline tab */}
           {activeTab === 'timeline' && (
             <div>
               <h3 className="text-sm font-semibold text-slate-700 mb-5">Application Timeline</h3>
@@ -645,7 +627,6 @@ const StudentDashboard = () => {
             </div>
           )}
 
-          {/* Timetable tab */}
           {activeTab === 'timetable' && (
             <div className="space-y-4">
               {ttLoading ? (
@@ -667,7 +648,6 @@ const StudentDashboard = () => {
                 </div>
               ) : (
                 <>
-                  {/* Group info */}
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-100">
                       Group: {timetable[0]?.groupName || application?.classGroupName}
@@ -675,7 +655,6 @@ const StudentDashboard = () => {
                     <span className="text-xs text-slate-400">{timetable.length} sessions / week</span>
                   </div>
 
-                  {/* Legend */}
                   <div className="flex flex-wrap gap-4">
                     {Object.entries(TIMETABLE_STYLE).map(([type, cfg]) => (
                       <div key={type} className="flex items-center gap-1.5">
@@ -685,7 +664,6 @@ const StudentDashboard = () => {
                     ))}
                   </div>
 
-                  {/* Grid */}
                   <div className="overflow-x-auto rounded-xl border border-slate-200">
                     <table className="w-full border-collapse text-xs" style={{ minWidth: '600px' }}>
                       <thead>
@@ -729,7 +707,6 @@ const StudentDashboard = () => {
                     </table>
                   </div>
 
-                  {/* Course list */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[...new Map(timetable.map((s) => [s.courseName, s])).values()].map((s) => {
                       const cfg = TIMETABLE_STYLE[s.slotType] || TT_DEFAULT;

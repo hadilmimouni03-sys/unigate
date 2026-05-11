@@ -95,15 +95,12 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex">
 
-      {/* ── Left branding panel ── */}
       <div className="hidden lg:flex lg:w-[46%] bg-primary-950 flex-col justify-between p-12 relative overflow-hidden">
-        {/* Geometric background */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary-800/30"/>
           <div className="absolute bottom-0 -left-24 w-72 h-72 rounded-full bg-primary-700/20"/>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-primary-700/20 rounded-full"/>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 border border-primary-600/15 rounded-full"/>
-          {/* Dot grid */}
           <svg className="absolute bottom-10 right-10 opacity-10" width="120" height="120" viewBox="0 0 120 120">
             {Array.from({ length: 6 }, (_, r) =>
               Array.from({ length: 6 }, (_, c) => (
@@ -113,7 +110,6 @@ const LoginPage = () => {
           </svg>
         </div>
 
-        {/* Logo */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-16">
             <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -132,7 +128,6 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Feature list */}
         <div className="relative z-10 space-y-3 my-10">
           {FEATURES.map((f) => (
             <div key={f.text} className="flex items-center gap-3">
@@ -149,12 +144,9 @@ const LoginPage = () => {
         <p className="text-primary-500 text-xs relative z-10">© 2026 UniGate — Smart University Portal</p>
       </div>
 
-      {/* ── Right form panel ── */}
       <div className="flex-1 flex flex-col bg-slate-50">
 
-        {/* Top bar */}
         <div className="flex items-center justify-between px-8 py-5">
-          {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">UG</span>
@@ -163,7 +155,6 @@ const LoginPage = () => {
           </div>
           <div className="hidden lg:block"/>
 
-          {/* Language switcher */}
           <div className="flex gap-1">
             {LANGUAGES.map((l) => (
               <button
@@ -181,7 +172,6 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Form area */}
         <div className="flex-1 flex items-center justify-center px-8 pb-12">
           <div className="w-full max-w-md">
 
@@ -190,7 +180,6 @@ const LoginPage = () => {
               <p className="text-slate-500 text-sm">Sign in to continue to UniGate</p>
             </div>
 
-            {/* Role selector */}
             <div className="flex gap-2 mb-7 p-1 bg-slate-200/60 rounded-xl">
               {ROLES.map((r) => (
                 <button
@@ -208,7 +197,6 @@ const LoginPage = () => {
               ))}
             </div>
 
-            {/* Card */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-7">
 
               {error && (
@@ -302,7 +290,6 @@ const LoginPage = () => {
               )}
             </div>
 
-            {/* Demo accounts */}
             <div className="mt-5">
               <button
                 onClick={() => setShowDemos(!showDemos)}

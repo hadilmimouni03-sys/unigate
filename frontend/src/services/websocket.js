@@ -42,11 +42,7 @@ export const disconnectWebSocket = () => {
   if (stompClient?.active) stompClient.deactivate();
 };
 
-/**
- * Creates an isolated STOMP client for grade simulation.
- * Returns { send, disconnect }.
- * onResult receives a SimulationResult object each time the server responds.
- */
+
 export const createSimulationClient = (userEmail, onResult) => {
   const client = new Client({
     webSocketFactory: () => new SockJS(WS_URL, null, { transports: ['websocket', 'xhr-streaming', 'xhr-polling'] }),

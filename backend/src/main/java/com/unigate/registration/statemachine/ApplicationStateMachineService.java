@@ -18,7 +18,6 @@ public class ApplicationStateMachineService {
         return type.isSelectiveType() ? buildConfigB() : buildConfigA();
     }
 
-    /** Config A — Ing types: no REFUSED terminal state */
     private StateMachine<ApplicationStatus, ApplicationEvent> buildConfigA() throws Exception {
         var builder = StateMachineBuilder.<ApplicationStatus, ApplicationEvent>builder();
         builder.configureStates().withStates()
@@ -43,7 +42,6 @@ public class ApplicationStateMachineService {
         return builder.build();
     }
 
-    /** Config B — Master/DD/Exchange: includes REFUSED terminal state */
     private StateMachine<ApplicationStatus, ApplicationEvent> buildConfigB() throws Exception {
         var builder = StateMachineBuilder.<ApplicationStatus, ApplicationEvent>builder();
         builder.configureStates().withStates()

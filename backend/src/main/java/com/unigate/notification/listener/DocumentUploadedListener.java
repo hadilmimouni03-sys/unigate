@@ -30,27 +30,23 @@ public class DocumentUploadedListener {
         String studentName = doc.getApplication().getStudent().getFullName();
         String department = doc.getApplication().getStudent().getDepartment();
 
-        // 1. Notify student: document received
         notificationService.send(
                 studentId,
                 "Document received",
                 "Your document \"" + doc.getType().name() + "\" has been uploaded and is pending review.",
                 "DOCUMENT_UPLOADED");
 
-        // 2. Check eligibility rules
         List<String> violations = eligibilityService.checkStudent(studentId);
         if (violations.isEmpty()) return;
 
         String violationText = String.join(", ", violations);
 
-        // 3a. Warn the student
         notificationService.send(
                 studentId,
                 "Eligibility Warning",
                 "You uploaded a document but may not meet eligibility requirements: " + violationText,
                 "SYSTEM");
 
-        // 3b. Alert all admins in this department
         if (department != null) {
             userRepository.findByRoleAndDepartment(Role.ADMIN, department).forEach(admin ->
                 notificationService.send(

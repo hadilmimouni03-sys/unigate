@@ -57,7 +57,6 @@ const EligibilityRulesPage = () => {
   const { user } = useAuth();
   const dept = user?.department;
 
-  // Load rules from API when year or dept changes
   useEffect(() => {
     if (!dept) return;
     eligibilityApi.getRules(dept, activeYear).then(({ data }) => {
@@ -111,7 +110,6 @@ const EligibilityRulesPage = () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {
-      // keep existing saved-false state
     }
   };
 
@@ -120,7 +118,6 @@ const EligibilityRulesPage = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Eligibility Rules</h1>
@@ -136,7 +133,6 @@ const EligibilityRulesPage = () => {
         </button>
       </div>
 
-      {/* Year tabs */}
       <div className="flex border-b border-slate-200 gap-1">
         {YEARS.map((year) => (
           <button
@@ -151,7 +147,6 @@ const EligibilityRulesPage = () => {
         ))}
       </div>
 
-      {/* Mini stats */}
       <div className="flex gap-3">
         {[
           { label: 'Total Rules', value: currentRules.length,             color: 'text-slate-800' },
@@ -165,7 +160,6 @@ const EligibilityRulesPage = () => {
         ))}
       </div>
 
-      {/* Rules table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-800">Rules for {activeYear}</h2>
@@ -229,7 +223,6 @@ const EligibilityRulesPage = () => {
         </div>
       </div>
 
-      {/* Info note */}
       <div className="bg-blue-50 rounded-xl border border-blue-100 px-4 py-3 flex gap-3">
         <svg className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>

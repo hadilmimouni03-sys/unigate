@@ -26,7 +26,7 @@ public class SwapRating {
     @JoinColumn(name = "ratee_id", nullable = false)
     private Student ratee;
 
-    private int score; // 1-5
+    private int score; 
     @Column(columnDefinition = "TEXT") private String comment;
 
     @Column(updatable = false) private LocalDateTime createdAt;

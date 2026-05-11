@@ -17,7 +17,6 @@ class SkillMatchingAlgorithmTest {
     private static final double W_RATING       = 0.10;
     private static final double W_DEPARTMENT   = 0.10;
 
-    /** Simplified score without DB dependencies */
     private double computeScore(SkillOffer requester, SkillOffer provider,
                                 Double avgGrade, Double avgRating) {
         Set<Long> wantedIds = Set.copyOf(requester.getSkillsWanted().stream()
@@ -66,7 +65,6 @@ class SkillMatchingAlgorithmTest {
                 .availability("Mon 14:00").build();
 
         double score = computeScore(requester, provider, 18.0, 5.0);
-        // skills=1.0, avail=1.0, grade=18/20=0.9, rating=(5-1)/4=1.0, dept=1.0
         double expected = W_SKILLS * 1.0 + W_AVAILABILITY * 1.0
                 + W_GRADE * 0.9 + W_RATING * 1.0 + W_DEPARTMENT * 1.0;
         assertThat(score).isCloseTo(expected, org.assertj.core.data.Offset.offset(0.001));
@@ -102,7 +100,7 @@ class SkillMatchingAlgorithmTest {
                 .student(prov).skillsOffered(Set.of(java)).availability("Mon").build();
 
         double score = computeScore(requester, provider, 12.0, null);
-        // dept component should be 0
+
         assertThat(score).isLessThan(W_SKILLS * 1.0 + W_AVAILABILITY * 1.0
                 + W_GRADE * 0.6 + W_RATING * 0.5 + W_DEPARTMENT * 1.0);
     }
