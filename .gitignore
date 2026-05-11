@@ -13,10 +13,11 @@ frontend/.env.*.local
 .env.*
 !.env.example
 
-# IDE
+# IDE / Claude Code
 .idea/
 *.iml
 .vscode/
+.claude/
 *.swp
 *.swo
 
